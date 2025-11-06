@@ -19,7 +19,7 @@ public class ProfileController {
         profile.setId(12345L);
         profile.setNbs("NBS123456");
         profile.setNdu("NDU789012");
-        profile.setName("Иван");
+        profile.setName("Виктор");
         profile.setSurname("Иванов");
         profile.setPatronymic("Иванович");
         profile.setPhotoUrl(
