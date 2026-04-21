@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class ProfileDto {
-    private Long id;
+    private int id;
     private String nbs;
     private String ndu;
     private String name;
@@ -27,7 +27,8 @@ public class ProfileDto {
     }
 
     // Конструктор со всеми полями (опционально)
-    public ProfileDto(Long id, String nbs, String ndu, String name, String surname,
+    public ProfileDto(
+            int id, String nbs, String ndu, String name, String surname,
             String patronymic, String photoUrl, String email, String phone, String dateOfBirth,
             String gender, String citizenship, String placeOfBirth,
             String documentType, String passportNumber, String passportIssueDate,
@@ -52,11 +53,11 @@ public class ProfileDto {
     }
 
     // Геттеры и сеттеры
-    public Long getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(int id) {
         this.id = id;
     }
 
