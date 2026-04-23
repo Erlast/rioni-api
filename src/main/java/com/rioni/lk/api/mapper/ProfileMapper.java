@@ -17,6 +17,7 @@ public class ProfileMapper {
         profileDto.setPhotoUrl(profile.getPhotoUrl());
         profileDto.setEmail(profile.getEmail());
         profileDto.setPhone(profile.getPhone());
+        profileDto.setDateOfBirth(profile.getDateOfBirth());
         profileDto.setPlaceOfBirth(profile.getPlaceOfBirth());
         profileDto.setGender(profile.getGender());
         profileDto.setCitizenship(profile.getCitizenship());

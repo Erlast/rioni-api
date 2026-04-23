@@ -1,9 +1,11 @@
 package com.rioni.lk.api.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 @Data
 public class ProfileDto {
+    @JsonIgnore
     private int id;
     private String nbs;
     private String ndu;
@@ -21,6 +23,7 @@ public class ProfileDto {
     private String passportNumber;
     private String passportIssueDate;
     private String passportExpiryDate;
+    private AccountDto account;
 
     // Конструктор по умолчанию
     public ProfileDto() {
