@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@JsonIgnoreProperties({"id", "profileId"})
+@JsonIgnoreProperties({"profileId"})
 public class AccountDto {
     private int id;
     private int profileId;

@@ -6,7 +6,9 @@ import com.rioni.lk.api.service.ProfileService;
 import com.rioni.lk.api.repository.ProfileRepository;
 import com.rioni.lk.api.repository.AccountRepository;
 import com.rioni.lk.api.mapper.ProfileMapper;
+import com.rioni.lk.api.dto.AccountDto;
 import org.springframework.stereotype.Service;
+import java.util.stream.Collectors;
 
 @Service
 public class ProfileServiceImpl implements ProfileService {
@@ -24,10 +26,12 @@ public class ProfileServiceImpl implements ProfileService {
         return profileRepository.findById(id)
                 .map(profile -> {
                     ProfileDto dto = ProfileMapper.mapToDto(profile);
-                    accountRepository.findAll().stream()
-                            .filter(acc -> acc.getProfileId() == profile.getId())
-                            .findFirst()
-                            .ifPresent(acc -> dto.setAccount(new com.rioni.lk.api.dto.AccountDto(acc)));
+                    dto.setAccounts(
+                            accountRepository.findAll().stream()
+                                    .filter(acc -> acc.getProfileId() == profile.getId())
+                                    .map(AccountDto::new)
+                                    .collect(Collectors.toList())
+                    );
                     return dto;
                 })
                 .orElse(null);
