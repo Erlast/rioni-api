@@ -26,12 +26,6 @@ public class ProfileServiceImpl implements ProfileService {
         return profileRepository.findById(id)
                 .map(profile -> {
                     ProfileDto dto = ProfileMapper.mapToDto(profile);
-                    dto.setAccounts(
-                            accountRepository.findAll().stream()
-                                    .filter(acc -> acc.getProfileId() == profile.getId())
-                                    .map(AccountDto::new)
-                                    .collect(Collectors.toList())
-                    );
                     return dto;
                 })
                 .orElse(null);
