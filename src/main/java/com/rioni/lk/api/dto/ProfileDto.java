@@ -19,10 +19,21 @@ public class ProfileDto {
     private String gender;
     private String citizenship;
     private String placeOfBirth;
+    private String countryOfBirth;
+    private String cityOfBirth;
     private String documentType;
     private String passportNumber;
     private String passportIssueDate;
     private String passportExpiryDate;
+    private String companyName;
+    private String companyIndustry;
+    private String companyPosition;
+    private String companyPhone;
+    private String companyWebsite;
+    private Boolean isNpo;
+    private Boolean isNgo;
+    private Boolean isSelfEmployed;
+    private Boolean isNotWorking;
 
     // Конструктор по умолчанию
     public ProfileDto() {
@@ -32,7 +43,7 @@ public class ProfileDto {
     public ProfileDto(
             int id, String nbs, String ndu, String name, String surname,
             String patronymic, String photoUrl, String email, String phone, String dateOfBirth,
-            String gender, String citizenship, String placeOfBirth,
+            String gender, String citizenship, String placeOfBirth, String countryOfBirth, String cityOfBirth,
             String documentType, String passportNumber, String passportIssueDate,
             String passportExpiryDate) {
         this.id = id;
@@ -48,6 +59,8 @@ public class ProfileDto {
         this.gender = gender;
         this.citizenship = citizenship;
         this.placeOfBirth = placeOfBirth;
+        this.countryOfBirth = countryOfBirth;
+        this.cityOfBirth = cityOfBirth;
         this.documentType = documentType;
         this.passportNumber = passportNumber;
         this.passportIssueDate = passportIssueDate;
@@ -159,6 +172,22 @@ public class ProfileDto {
         this.placeOfBirth = placeOfBirth;
     }
 
+    public String getCountryOfBirth() {
+        return countryOfBirth;
+    }
+
+    public void setCountryOfBirth(String countryOfBirth) {
+        this.countryOfBirth = countryOfBirth;
+    }
+
+    public String getCityOfBirth() {
+        return cityOfBirth;
+    }
+
+    public void setCityOfBirth(String cityOfBirth) {
+        this.cityOfBirth = cityOfBirth;
+    }
+
     public String getDocumentType() {
         return documentType;
     }
@@ -189,5 +218,77 @@ public class ProfileDto {
 
     public void setPassportExpiryDate(String passportExpiryDate) {
         this.passportExpiryDate = passportExpiryDate;
+    }
+
+    public String getCompanyName() {
+        return companyName;
+    }
+
+    public void setCompanyName(String companyName) {
+        this.companyName = companyName;
+    }
+
+    public String getCompanyIndustry() {
+        return companyIndustry;
+    }
+
+    public void setCompanyIndustry(String companyIndustry) {
+        this.companyIndustry = companyIndustry;
+    }
+
+    public String getCompanyPosition() {
+        return companyPosition;
+    }
+
+    public void setCompanyPosition(String companyPosition) {
+        this.companyPosition = companyPosition;
+    }
+
+    public String getCompanyPhone() {
+        return companyPhone;
+    }
+
+    public void setCompanyPhone(String companyPhone) {
+        this.companyPhone = companyPhone;
+    }
+
+    public String getCompanyWebsite() {
+        return companyWebsite;
+    }
+
+    public void setCompanyWebsite(String companyWebsite) {
+        this.companyWebsite = companyWebsite;
+    }
+
+    public Boolean getIsNpo() {
+        return isNpo;
+    }
+
+    public void setIsNpo(Boolean isNpo) {
+        this.isNpo = isNpo;
+    }
+
+    public Boolean getIsNgo() {
+        return isNgo;
+    }
+
+    public void setIsNgo(Boolean isNgo) {
+        this.isNgo = isNgo;
+    }
+
+    public Boolean getIsSelfEmployed() {
+        return isSelfEmployed;
+    }
+
+    public void setIsSelfEmployed(Boolean isSelfEmployed) {
+        this.isSelfEmployed = isSelfEmployed;
+    }
+
+    public Boolean getIsNotWorking() {
+        return isNotWorking;
+    }
+
+    public void setIsNotWorking(Boolean isNotWorking) {
+        this.isNotWorking = isNotWorking;
     }
 }

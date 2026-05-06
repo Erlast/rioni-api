@@ -28,9 +28,20 @@ public class Profile {
     private String Citizenship;
     private String DateOfBirth;
     private String PlaceOfBirth;
+    private String CountryOfBirth;
+    private String CityOfBirth;
     private String DocumentType;
     private String PassportNumber;
     private String PassportIssueDate;
     private String PassportExpiryDate;
+    private String CompanyName;
+    private String CompanyIndustry;
+    private String CompanyPosition;
+    private String CompanyPhone;
+    private String CompanyWebsite;
+    private Boolean isNpo;
+    private Boolean isNgo;
+    private Boolean isSelfEmployed;
+    private Boolean isNotWorking;
 
 }
