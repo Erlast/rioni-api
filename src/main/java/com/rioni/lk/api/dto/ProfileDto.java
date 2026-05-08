@@ -1,294 +1,127 @@
 package com.rioni.lk.api.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Data;
 
-@Data
 public class ProfileDto {
     @JsonIgnore
     private int id;
-    private String nbs;
-    private String ndu;
-    private String name;
-    private String surname;
-    private String patronymic;
-    private String photoUrl;
-    private String email;
-    private String phone;
-    private String dateOfBirth;
-    private String gender;
-    private String citizenship;
-    private String placeOfBirth;
-    private String countryOfBirth;
-    private String cityOfBirth;
-    private String documentType;
-    private String passportNumber;
-    private String passportIssueDate;
-    private String passportExpiryDate;
-    private String companyName;
-    private String companyIndustry;
-    private String companyPosition;
-    private String companyPhone;
-    private String companyWebsite;
-    private Boolean isNpo;
-    private Boolean isNgo;
-    private Boolean isSelfEmployed;
-    private Boolean isNotWorking;
 
-    // Конструктор по умолчанию
+    private Nullable<String> nbs;
+    private Nullable<String> ndu;
+    private Nullable<String> name;
+    private Nullable<String> surname;
+    private Nullable<String> patronymic;
+    private Nullable<String> photoUrl;
+    private Nullable<String> email;
+    private Nullable<String> phone;
+    private Nullable<String> dateOfBirth;
+    private Nullable<String> gender;
+    private Nullable<String> citizenship;
+    private Nullable<String> placeOfBirth;
+    private Nullable<String> countryOfBirth;
+    private Nullable<String> cityOfBirth;
+    private Nullable<String> documentType;
+    private Nullable<String> passportNumber;
+    private Nullable<String> passportIssueDate;
+    private Nullable<String> passportExpiryDate;
+    private Nullable<String> companyName;
+    private Nullable<String> companyIndustry;
+    private Nullable<String> companyPosition;
+    private Nullable<String> companyPhone;
+    private Nullable<String> companyWebsite;
+    private Nullable<Boolean> isNgo;
+    private Nullable<Boolean> isNotWorking;
+    private Nullable<Boolean> isNpo;
+    private Nullable<Boolean> isSelfEmployed;
+    private Nullable<String> issuedBy;
+
     public ProfileDto() {
     }
 
-    // Конструктор со всеми полями (опционально)
-    public ProfileDto(
-            int id, String nbs, String ndu, String name, String surname,
-            String patronymic, String photoUrl, String email, String phone, String dateOfBirth,
-            String gender, String citizenship, String placeOfBirth, String countryOfBirth, String cityOfBirth,
-            String documentType, String passportNumber, String passportIssueDate,
-            String passportExpiryDate) {
-        this.id = id;
-        this.nbs = nbs;
-        this.ndu = ndu;
-        this.name = name;
-        this.surname = surname;
-        this.patronymic = patronymic;
-        this.photoUrl = photoUrl;
-        this.email = email;
-        this.phone = phone;
-        this.dateOfBirth = dateOfBirth;
-        this.gender = gender;
-        this.citizenship = citizenship;
-        this.placeOfBirth = placeOfBirth;
-        this.countryOfBirth = countryOfBirth;
-        this.cityOfBirth = cityOfBirth;
-        this.documentType = documentType;
-        this.passportNumber = passportNumber;
-        this.passportIssueDate = passportIssueDate;
-        this.passportExpiryDate = passportExpiryDate;
-    }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
-    // Геттеры и сеттеры
-    public int getId() {
-        return id;
-    }
+    public Nullable<String> getNbs() { return nbs; }
+    public void setNbs(String v) { this.nbs = new Nullable<>(v, true); }
 
-    public void setId(int id) {
-        this.id = id;
-    }
+    public Nullable<String> getNdu() { return ndu; }
+    public void setNdu(String v) { this.ndu = new Nullable<>(v, true); }
 
-    public String getNbs() {
-        return nbs;
-    }
+    public Nullable<String> getName() { return name; }
+    public void setName(String v) { this.name = new Nullable<>(v, true); }
 
-    public void setNbs(String nbs) {
-        this.nbs = nbs;
-    }
+    public Nullable<String> getSurname() { return surname; }
+    public void setSurname(String v) { this.surname = new Nullable<>(v, true); }
 
-    public String getNdu() {
-        return ndu;
-    }
+    public Nullable<String> getPatronymic() { return patronymic; }
+    public void setPatronymic(String v) { this.patronymic = new Nullable<>(v, true); }
 
-    public void setNdu(String ndu) {
-        this.ndu = ndu;
-    }
+    public Nullable<String> getPhotoUrl() { return photoUrl; }
+    public void setPhotoUrl(String v) { this.photoUrl = new Nullable<>(v, true); }
 
-    public String getName() {
-        return name;
-    }
+    public Nullable<String> getEmail() { return email; }
+    public void setEmail(String v) { this.email = new Nullable<>(v, true); }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+    public Nullable<String> getPhone() { return phone; }
+    public void setPhone(String v) { this.phone = new Nullable<>(v, true); }
 
-    public String getSurname() {
-        return surname;
-    }
+    public Nullable<String> getDateOfBirth() { return dateOfBirth; }
+    public void setDateOfBirth(String v) { this.dateOfBirth = new Nullable<>(v, true); }
 
-    public void setSurname(String surname) {
-        this.surname = surname;
-    }
+    public Nullable<String> getGender() { return gender; }
+    public void setGender(String v) { this.gender = new Nullable<>(v, true); }
 
-    public String getPatronymic() {
-        return patronymic;
-    }
+    public Nullable<String> getCitizenship() { return citizenship; }
+    public void setCitizenship(String v) { this.citizenship = new Nullable<>(v, true); }
 
-    public void setPatronymic(String patronymic) {
-        this.patronymic = patronymic;
-    }
+    public Nullable<String> getPlaceOfBirth() { return placeOfBirth; }
+    public void setPlaceOfBirth(String v) { this.placeOfBirth = new Nullable<>(v, true); }
 
-    public String getPhotoUrl() {
-        return photoUrl;
-    }
+    public Nullable<String> getCountryOfBirth() { return countryOfBirth; }
+    public void setCountryOfBirth(String v) { this.countryOfBirth = new Nullable<>(v, true); }
 
-    public void setPhotoUrl(String photoUrl) {
-        this.photoUrl = photoUrl;
-    }
+    public Nullable<String> getCityOfBirth() { return cityOfBirth; }
+    public void setCityOfBirth(String v) { this.cityOfBirth = new Nullable<>(v, true); }
 
-    public String getEmail() {
-        return email;
-    }
+    public Nullable<String> getDocumentType() { return documentType; }
+    public void setDocumentType(String v) { this.documentType = new Nullable<>(v, true); }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+    public Nullable<String> getPassportNumber() { return passportNumber; }
+    public void setPassportNumber(String v) { this.passportNumber = new Nullable<>(v, true); }
 
-    public String getPhone() {
-        return phone;
-    }
+    public Nullable<String> getPassportIssueDate() { return passportIssueDate; }
+    public void setPassportIssueDate(String v) { this.passportIssueDate = new Nullable<>(v, true); }
 
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
+    public Nullable<String> getPassportExpiryDate() { return passportExpiryDate; }
+    public void setPassportExpiryDate(String v) { this.passportExpiryDate = new Nullable<>(v, true); }
 
-    public String getDateOfBirth() {
-        return dateOfBirth;
-    }
+    public Nullable<String> getCompanyName() { return companyName; }
+    public void setCompanyName(String v) { this.companyName = new Nullable<>(v, true); }
 
-    public void setDateOfBirth(String dateOfBirth) {
-        this.dateOfBirth = dateOfBirth;
-    }
+    public Nullable<String> getCompanyIndustry() { return companyIndustry; }
+    public void setCompanyIndustry(String v) { this.companyIndustry = new Nullable<>(v, true); }
 
-    public String getGender() {
-        return gender;
-    }
+    public Nullable<String> getCompanyPosition() { return companyPosition; }
+    public void setCompanyPosition(String v) { this.companyPosition = new Nullable<>(v, true); }
 
-    public void setGender(String gender) {
-        this.gender = gender;
-    }
+    public Nullable<String> getCompanyPhone() { return companyPhone; }
+    public void setCompanyPhone(String v) { this.companyPhone = new Nullable<>(v, true); }
 
-    public String getCitizenship() {
-        return citizenship;
-    }
+    public Nullable<String> getCompanyWebsite() { return companyWebsite; }
+    public void setCompanyWebsite(String v) { this.companyWebsite = new Nullable<>(v, true); }
 
-    public void setCitizenship(String citizenship) {
-        this.citizenship = citizenship;
-    }
+    public Nullable<Boolean> getIsNgo() { return isNgo; }
+    public void setIsNgo(Boolean v) { this.isNgo = new Nullable<>(v, true); }
 
-    public String getPlaceOfBirth() {
-        return placeOfBirth;
-    }
+    public Nullable<Boolean> getIsNotWorking() { return isNotWorking; }
+    public void setIsNotWorking(Boolean v) { this.isNotWorking = new Nullable<>(v, true); }
 
-    public void setPlaceOfBirth(String placeOfBirth) {
-        this.placeOfBirth = placeOfBirth;
-    }
+    public Nullable<Boolean> getIsNpo() { return isNpo; }
+    public void setIsNpo(Boolean v) { this.isNpo = new Nullable<>(v, true); }
 
-    public String getCountryOfBirth() {
-        return countryOfBirth;
-    }
+    public Nullable<Boolean> getIsSelfEmployed() { return isSelfEmployed; }
+    public void setIsSelfEmployed(Boolean v) { this.isSelfEmployed = new Nullable<>(v, true); }
 
-    public void setCountryOfBirth(String countryOfBirth) {
-        this.countryOfBirth = countryOfBirth;
-    }
-
-    public String getCityOfBirth() {
-        return cityOfBirth;
-    }
-
-    public void setCityOfBirth(String cityOfBirth) {
-        this.cityOfBirth = cityOfBirth;
-    }
-
-    public String getDocumentType() {
-        return documentType;
-    }
-
-    public void setDocumentType(String documentType) {
-        this.documentType = documentType;
-    }
-
-    public String getPassportNumber() {
-        return passportNumber;
-    }
-
-    public void setPassportNumber(String passportNumber) {
-        this.passportNumber = passportNumber;
-    }
-
-    public String getPassportIssueDate() {
-        return passportIssueDate;
-    }
-
-    public void setPassportIssueDate(String passportIssueDate) {
-        this.passportIssueDate = passportIssueDate;
-    }
-
-    public String getPassportExpiryDate() {
-        return passportExpiryDate;
-    }
-
-    public void setPassportExpiryDate(String passportExpiryDate) {
-        this.passportExpiryDate = passportExpiryDate;
-    }
-
-    public String getCompanyName() {
-        return companyName;
-    }
-
-    public void setCompanyName(String companyName) {
-        this.companyName = companyName;
-    }
-
-    public String getCompanyIndustry() {
-        return companyIndustry;
-    }
-
-    public void setCompanyIndustry(String companyIndustry) {
-        this.companyIndustry = companyIndustry;
-    }
-
-    public String getCompanyPosition() {
-        return companyPosition;
-    }
-
-    public void setCompanyPosition(String companyPosition) {
-        this.companyPosition = companyPosition;
-    }
-
-    public String getCompanyPhone() {
-        return companyPhone;
-    }
-
-    public void setCompanyPhone(String companyPhone) {
-        this.companyPhone = companyPhone;
-    }
-
-    public String getCompanyWebsite() {
-        return companyWebsite;
-    }
-
-    public void setCompanyWebsite(String companyWebsite) {
-        this.companyWebsite = companyWebsite;
-    }
-
-    public Boolean getIsNpo() {
-        return isNpo;
-    }
-
-    public void setIsNpo(Boolean isNpo) {
-        this.isNpo = isNpo;
-    }
-
-    public Boolean getIsNgo() {
-        return isNgo;
-    }
-
-    public void setIsNgo(Boolean isNgo) {
-        this.isNgo = isNgo;
-    }
-
-    public Boolean getIsSelfEmployed() {
-        return isSelfEmployed;
-    }
-
-    public void setIsSelfEmployed(Boolean isSelfEmployed) {
-        this.isSelfEmployed = isSelfEmployed;
-    }
-
-    public Boolean getIsNotWorking() {
-        return isNotWorking;
-    }
-
-    public void setIsNotWorking(Boolean isNotWorking) {
-        this.isNotWorking = isNotWorking;
-    }
+    public Nullable<String> getIssuedBy() { return issuedBy; }
+    public void setIssuedBy(String v) { this.issuedBy = new Nullable<>(v, true); }
 }

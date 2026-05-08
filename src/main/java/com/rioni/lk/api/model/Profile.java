@@ -43,5 +43,6 @@ public class Profile {
     private Boolean isNgo;
     private Boolean isSelfEmployed;
     private Boolean isNotWorking;
+    private String issuedBy;
 
 }
