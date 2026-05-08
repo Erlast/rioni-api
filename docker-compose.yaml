@@ -1,22 +1,20 @@
 services:
   api:
     build: .
-    image: rioni-api:latest
+    image: rioni-api-nginx
     environment:
-      SPRING_PROFILES_ACTIVE: prod
-      DB_HOST: postgres-16-1-master
+      SPRING_PROFILES_ACTIVE: dev
+      DB_HOST: localhost
       DB_PORT: 5432
       DB_NAME: rioni_db
-      DB_SCHEMA: rioni_prod
+      DB_SCHEMA: rioni_dev
       DB_USERNAME: rioni_db
-      DB_PASSWORD: ${DB_PASSWORD}
+      DB_PASSWORD: ${DB_PASSWORD:-xDspl!pzoxI98^zLPz_02kLk}
     ports:
       - '8081:8080'
-      - '5005:5005'
-    restart: unless-stopped
+    restart: always
     networks:
       - dev
-
 networks:
   dev:
     external: true
