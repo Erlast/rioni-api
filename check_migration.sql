@@ -1,0 +1,1 @@
+SELECT * FROM flyway_schema_history WHERE schema_name = 'rioni_dev' ORDER BY installed_rank;

@@ -24,4 +24,8 @@ public class Subaccount {
 
      @Column(name = "subaccount_type_code")
     private String subaccountTypeCode;
+
+    @OneToOne(fetch = FetchType.LAZY) 
+    @JoinColumn(name = "account_id", insertable = false, updatable = false)
+    private Account account;
 }

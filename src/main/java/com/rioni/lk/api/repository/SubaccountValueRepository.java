@@ -1,0 +1,19 @@
+package com.rioni.lk.api.repository;
+
+import com.rioni.lk.api.model.SubaccountValue;
+import com.rioni.lk.api.model.SubaccountValueId;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+import java.util.List;
+
+@Repository
+public interface SubaccountValueRepository extends JpaRepository<SubaccountValue, SubaccountValueId> {
+    @Query("select sv.subaccountId, sv.balanceValue " +
+           "from SubaccountValue sv " +
+           "where sv.subaccountId in (" +
+           "  select s.id from Subaccount s where s.accountId = :accountId" +
+           ")")
+    List<Object[]> findByAccountId(@Param("accountId") Integer accountId);
+}
