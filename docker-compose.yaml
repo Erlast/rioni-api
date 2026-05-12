@@ -1,16 +1,22 @@
 services:
   api:
     build: .
-    image: rioni-api-dev:latest
+    image: rioni-api:latest
     environment:
-      SPRING_PROFILES_ACTIVE: dev
-      DB_HOST: localhost
-      DB_PORT: 5432
-      DB_NAME: rioni_db
-      DB_SCHEMA: rioni_dev
-      DB_USERNAME: rioni_db
-      DB_PASSWORD: ${DB_PASSWORD:-xDspl!pzoxI98^zLPz_02kLk}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      DB_HOST: ${DB_HOST:-host.docker.internal}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-rioni_db}
+      DB_SCHEMA: ${DB_SCHEMA:-rioni_dev}
+      DB_USERNAME: ${DB_USERNAME:-rioni_db}
+      DB_PASSWORD: ${DB_PASSWORD}
     ports:
-      - '8081:8080'
+      - '${API_PORT:-8081}:8081'
       - '5005:5005'
     restart: unless-stopped
+    networks:
+      - dev
+
+networks:
+  dev:
+    external: true
