@@ -1,6 +1,7 @@
 package com.rioni.lk.api.dto;
 
 import lombok.Data;
+import java.util.List;
 
 @Data
 public class ProfileResponseDto {
@@ -9,16 +10,14 @@ public class ProfileResponseDto {
     private String ndu;
     private String name;
     private String surname;
+    private String nickname;
+    private String login;
     private String patronymic;
     private String photoUrl;
-    private String email;
-    private String phone;
     private String dateOfBirth;
     private String gender;
     private String citizenship;
     private String placeOfBirth;
-    private String countryOfBirth;
-    private String cityOfBirth;
     private String documentType;
     private String passportNumber;
     private String passportIssueDate;
@@ -33,4 +32,6 @@ public class ProfileResponseDto {
     private Boolean isSelfEmployed;
     private Boolean isNotWorking;
     private String issuedBy;
+    private List<ProfileContactDto> contacts;
+    private List<ProfileAddressDto> addresses;
 }

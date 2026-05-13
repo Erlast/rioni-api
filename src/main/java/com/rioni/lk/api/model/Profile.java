@@ -19,17 +19,15 @@ public class Profile {
     private String Nbs;
     private String Ndu;
     private String Surname;
+    private String Nickname;
+    private String Login;
     private String Patronymic;
     @Column(columnDefinition = "text")
     private String PhotoUrl;
-    private String Email;
-    private String Phone;
     private String Gender;
     private String Citizenship;
     private String DateOfBirth;
     private String PlaceOfBirth;
-    private String CountryOfBirth;
-    private String CityOfBirth;
     private String DocumentType;
     private String PassportNumber;
     private String PassportIssueDate;

@@ -3,12 +3,18 @@ package com.rioni.lk.api.mapper;
 import lombok.NoArgsConstructor;
 import com.rioni.lk.api.dto.ProfileDto;
 import com.rioni.lk.api.dto.ProfileResponseDto;
+import com.rioni.lk.api.dto.ProfileContactDto;
+import com.rioni.lk.api.dto.ProfileAddressDto;
 import com.rioni.lk.api.dto.Nullable;
 import com.rioni.lk.api.model.Profile;
+import com.rioni.lk.api.model.ProfileContact;
+import com.rioni.lk.api.model.ProfileAddress;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @NoArgsConstructor
 public class ProfileMapper {
-    public static ProfileResponseDto mapToDto(Profile profile) {
+    public static ProfileResponseDto mapToDto(Profile profile, List<ProfileContact> contacts, List<ProfileAddress> addresses) {
         ProfileResponseDto dto = new ProfileResponseDto();
         dto.setId(profile.getId());
         dto.setNbs(profile.getNbs());
@@ -16,15 +22,13 @@ public class ProfileMapper {
         dto.setName(profile.getName());
         dto.setSurname(profile.getSurname());
         dto.setPatronymic(profile.getPatronymic());
+        dto.setNickname(profile.getNickname());
+        dto.setLogin(profile.getLogin());
         dto.setPhotoUrl(profile.getPhotoUrl());
-        dto.setEmail(profile.getEmail());
-        dto.setPhone(profile.getPhone());
         dto.setDateOfBirth(profile.getDateOfBirth());
         dto.setGender(profile.getGender());
         dto.setCitizenship(profile.getCitizenship());
         dto.setPlaceOfBirth(profile.getPlaceOfBirth());
-        dto.setCountryOfBirth(profile.getCountryOfBirth());
-        dto.setCityOfBirth(profile.getCityOfBirth());
         dto.setDocumentType(profile.getDocumentType());
         dto.setPassportNumber(profile.getPassportNumber());
         dto.setPassportIssueDate(profile.getPassportIssueDate());
@@ -39,6 +43,33 @@ public class ProfileMapper {
         dto.setIsNgo(profile.getIsNgo());
         dto.setIsSelfEmployed(profile.getIsSelfEmployed());
         dto.setIsNotWorking(profile.getIsNotWorking());
+        dto.setContacts(contacts.stream().map(ProfileMapper::mapContactToDto).collect(Collectors.toList()));
+        dto.setAddresses(addresses.stream().map(ProfileMapper::mapAddressToDto).collect(Collectors.toList()));
+        return dto;
+    }
+
+    public static ProfileContactDto mapContactToDto(ProfileContact contact) {
+        ProfileContactDto dto = new ProfileContactDto();
+        dto.setId(contact.getId());
+        dto.setProfileId(contact.getProfileId());
+        dto.setContactType(contact.getContactType());
+        dto.setIsMain(contact.getIsMain());
+        dto.setValue(contact.getValue());
+        dto.setIsConfirmed(contact.getIsConfirmed());
+        return dto;
+    }
+
+    public static ProfileAddressDto mapAddressToDto(ProfileAddress address) {
+        ProfileAddressDto dto = new ProfileAddressDto();
+        dto.setId(address.getId());
+        dto.setProfileId(address.getProfileId());
+        dto.setCountry(address.getCountry());
+        dto.setCity(address.getCity());
+        dto.setPostcode(address.getPostcode());
+        dto.setAddress(address.getAddress());
+        dto.setIsMain(address.getIsMain());
+        dto.setIsConfirmed(address.getIsConfirmed());
+        dto.setAddressType(address.getAddressType());
         return dto;
     }
 
@@ -49,14 +80,10 @@ public class ProfileMapper {
         if (dto.getSurname() != null && dto.getSurname().wasSent()) profile.setSurname((String) dto.getSurname().getValue());
         if (dto.getPatronymic() != null && dto.getPatronymic().wasSent()) profile.setPatronymic((String) dto.getPatronymic().getValue());
         if (dto.getPhotoUrl() != null && dto.getPhotoUrl().wasSent()) profile.setPhotoUrl((String) dto.getPhotoUrl().getValue());
-        if (dto.getEmail() != null && dto.getEmail().wasSent()) profile.setEmail((String) dto.getEmail().getValue());
-        if (dto.getPhone() != null && dto.getPhone().wasSent()) profile.setPhone((String) dto.getPhone().getValue());
         if (dto.getDateOfBirth() != null && dto.getDateOfBirth().wasSent()) profile.setDateOfBirth((String) dto.getDateOfBirth().getValue());
         if (dto.getGender() != null && dto.getGender().wasSent()) profile.setGender((String) dto.getGender().getValue());
         if (dto.getCitizenship() != null && dto.getCitizenship().wasSent()) profile.setCitizenship((String) dto.getCitizenship().getValue());
         if (dto.getPlaceOfBirth() != null && dto.getPlaceOfBirth().wasSent()) profile.setPlaceOfBirth((String) dto.getPlaceOfBirth().getValue());
-        if (dto.getCountryOfBirth() != null && dto.getCountryOfBirth().wasSent()) profile.setCountryOfBirth((String) dto.getCountryOfBirth().getValue());
-        if (dto.getCityOfBirth() != null && dto.getCityOfBirth().wasSent()) profile.setCityOfBirth((String) dto.getCityOfBirth().getValue());
         if (dto.getDocumentType() != null && dto.getDocumentType().wasSent()) profile.setDocumentType((String) dto.getDocumentType().getValue());
         if (dto.getPassportNumber() != null && dto.getPassportNumber().wasSent()) profile.setPassportNumber((String) dto.getPassportNumber().getValue());
         if (dto.getPassportIssueDate() != null && dto.getPassportIssueDate().wasSent()) profile.setPassportIssueDate((String) dto.getPassportIssueDate().getValue());
@@ -71,6 +98,8 @@ public class ProfileMapper {
         if (dto.getIsNgo() != null && dto.getIsNgo().wasSent()) profile.setIsNgo((Boolean) dto.getIsNgo().getValue());
         if (dto.getIsSelfEmployed() != null && dto.getIsSelfEmployed().wasSent()) profile.setIsSelfEmployed((Boolean) dto.getIsSelfEmployed().getValue());
         if (dto.getIsNotWorking() != null && dto.getIsNotWorking().wasSent()) profile.setIsNotWorking((Boolean) dto.getIsNotWorking().getValue());
+        if (dto.getNickname() != null && dto.getNickname().wasSent()) profile.setNickname((String) dto.getNickname().getValue());
+        if (dto.getLogin() != null && dto.getLogin().wasSent()) profile.setLogin((String) dto.getLogin().getValue());
     }
 
 }

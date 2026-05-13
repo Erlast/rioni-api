@@ -34,6 +34,8 @@ public class ProfileDto {
     private Nullable<Boolean> isNpo;
     private Nullable<Boolean> isSelfEmployed;
     private Nullable<String> issuedBy;
+    private Nullable<String> nickname;
+    private Nullable<String> login;
 
     public ProfileDto() {
     }
@@ -124,4 +126,10 @@ public class ProfileDto {
 
     public Nullable<String> getIssuedBy() { return issuedBy; }
     public void setIssuedBy(String v) { this.issuedBy = new Nullable<>(v, true); }
+
+    public Nullable<String> getNickname() { return nickname; }
+    public void setNickname(String v) { this.nickname = new Nullable<>(v, true); }
+
+    public Nullable<String> getLogin() { return login; }
+    public void setLogin(String v) { this.login = new Nullable<>(v, true); }
 }

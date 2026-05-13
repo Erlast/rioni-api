@@ -1,0 +1,1 @@
+ALTER TABLE profile_contacts ADD COLUMN IF NOT EXISTS is_confirmed BOOLEAN NOT NULL DEFAULT false;

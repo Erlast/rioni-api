@@ -1,0 +1,2 @@
+CREATE UNIQUE INDEX idx_profile_addresses_unique_type
+ON profile_addresses(profile_id, address_type);

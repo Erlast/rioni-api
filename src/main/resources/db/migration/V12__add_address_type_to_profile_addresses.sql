@@ -1,0 +1,1 @@
+ALTER TABLE profile_addresses ADD COLUMN IF NOT EXISTS address_type VARCHAR(20) NOT NULL DEFAULT 'actual' CHECK (address_type IN ('registration', 'actual'));
