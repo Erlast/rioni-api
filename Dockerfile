@@ -26,7 +26,7 @@ RUN gradle build -x compileTestJava
 
 ENV JAR_NAME=api-1.0.0.jar
 ENV APP_HOME=/app
-ENV SPRING_PROFILES_ACTIVE=dev
+ENV SPRING_PROFILES_ACTIVE=prod
 
 EXPOSE 8080 5005
 
