@@ -36,6 +36,9 @@ public class ProfileDto {
     private Nullable<String> issuedBy;
     private Nullable<String> nickname;
     private Nullable<String> login;
+    private Nullable<Boolean> hasBeneficiaries;
+    private Nullable<Boolean> isPep;
+    private Nullable<Boolean> noResidencePermit;
 
     public ProfileDto() {
     }
@@ -132,4 +135,13 @@ public class ProfileDto {
 
     public Nullable<String> getLogin() { return login; }
     public void setLogin(String v) { this.login = new Nullable<>(v, true); }
+
+    public Nullable<Boolean> getHasBeneficiaries() { return hasBeneficiaries; }
+    public void setHasBeneficiaries(Boolean v) { this.hasBeneficiaries = new Nullable<>(v, true); }
+
+    public Nullable<Boolean> getIsPep() { return isPep; }
+    public void setIsPep(Boolean v) { this.isPep = new Nullable<>(v, true); }
+
+    public Nullable<Boolean> getNoResidencePermit() { return noResidencePermit; }
+    public void setNoResidencePermit(Boolean v) { this.noResidencePermit = new Nullable<>(v, true); }
 }

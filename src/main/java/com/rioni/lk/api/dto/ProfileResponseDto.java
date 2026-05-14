@@ -34,4 +34,7 @@ public class ProfileResponseDto {
     private String issuedBy;
     private List<ProfileContactDto> contacts;
     private List<ProfileAddressDto> addresses;
+    private Boolean hasBeneficiaries;
+    private Boolean isPep;
+    private Boolean noResidencePermit;
 }

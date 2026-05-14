@@ -5,7 +5,6 @@ import lombok.Data;
 @Data
 public class ProfileContactDto {
     private int id;
-    private int profileId;
     private String contactType;
     private Boolean isMain;
     private String value;

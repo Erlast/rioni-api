@@ -43,6 +43,9 @@ public class ProfileMapper {
         dto.setIsNgo(profile.getIsNgo());
         dto.setIsSelfEmployed(profile.getIsSelfEmployed());
         dto.setIsNotWorking(profile.getIsNotWorking());
+        dto.setHasBeneficiaries(profile.getHasBeneficiaries());
+        dto.setIsPep(profile.getIsPep());
+        dto.setNoResidencePermit(profile.getNoResidencePermit());
         dto.setContacts(contacts.stream().map(ProfileMapper::mapContactToDto).collect(Collectors.toList()));
         dto.setAddresses(addresses.stream().map(ProfileMapper::mapAddressToDto).collect(Collectors.toList()));
         return dto;
@@ -51,7 +54,6 @@ public class ProfileMapper {
     public static ProfileContactDto mapContactToDto(ProfileContact contact) {
         ProfileContactDto dto = new ProfileContactDto();
         dto.setId(contact.getId());
-        dto.setProfileId(contact.getProfileId());
         dto.setContactType(contact.getContactType());
         dto.setIsMain(contact.getIsMain());
         dto.setValue(contact.getValue());
@@ -62,7 +64,6 @@ public class ProfileMapper {
     public static ProfileAddressDto mapAddressToDto(ProfileAddress address) {
         ProfileAddressDto dto = new ProfileAddressDto();
         dto.setId(address.getId());
-        dto.setProfileId(address.getProfileId());
         dto.setCountry(address.getCountry());
         dto.setCity(address.getCity());
         dto.setPostcode(address.getPostcode());
@@ -100,6 +101,9 @@ public class ProfileMapper {
         if (dto.getIsNotWorking() != null && dto.getIsNotWorking().wasSent()) profile.setIsNotWorking((Boolean) dto.getIsNotWorking().getValue());
         if (dto.getNickname() != null && dto.getNickname().wasSent()) profile.setNickname((String) dto.getNickname().getValue());
         if (dto.getLogin() != null && dto.getLogin().wasSent()) profile.setLogin((String) dto.getLogin().getValue());
+        if (dto.getHasBeneficiaries() != null && dto.getHasBeneficiaries().wasSent()) profile.setHasBeneficiaries((Boolean) dto.getHasBeneficiaries().getValue());
+        if (dto.getIsPep() != null && dto.getIsPep().wasSent()) profile.setIsPep((Boolean) dto.getIsPep().getValue());
+        if (dto.getNoResidencePermit() != null && dto.getNoResidencePermit().wasSent()) profile.setNoResidencePermit((Boolean) dto.getNoResidencePermit().getValue());
     }
 
 }

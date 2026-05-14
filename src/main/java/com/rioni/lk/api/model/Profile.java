@@ -42,5 +42,8 @@ public class Profile {
     private Boolean isSelfEmployed;
     private Boolean isNotWorking;
     private String issuedBy;
+    private Boolean hasBeneficiaries;
+    private Boolean isPep;
+    private Boolean noResidencePermit;
 
 }

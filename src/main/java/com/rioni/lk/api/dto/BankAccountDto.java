@@ -3,13 +3,13 @@ package com.rioni.lk.api.dto;
 import lombok.Data;
 
 @Data
-public class ProfileAddressDto {
+public class BankAccountDto {
     private int id;
     private String country;
-    private String city;
-    private String postcode;
-    private String address;
+    private String bankName;
+    private String iban;
+    private String swift;
     private Boolean isMain;
     private Boolean isConfirmed;
-    private String addressType;
+    private Boolean isBlocked;
 }
