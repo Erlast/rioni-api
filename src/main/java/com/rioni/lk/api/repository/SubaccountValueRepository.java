@@ -16,4 +16,14 @@ public interface SubaccountValueRepository extends JpaRepository<SubaccountValue
            "  select s.id from Subaccount s where s.accountId = :accountId" +
            ")")
     List<Object[]> findByAccountId(@Param("accountId") Integer accountId);
+
+    @Query("select sv.date, sum(sv.balanceValue) " +
+           "from SubaccountValue sv " +
+           "where sv.subaccountId in (" +
+           "  select s.id from Subaccount s where s.accountId = :accountId" +
+           ") " +
+           "and sv.date >= :startDate " +
+           "group by sv.date " +
+           "order by sv.date")
+    List<Object[]> findGroupedByDateByAccountId(@Param("accountId") Integer accountId, @Param("startDate") String startDate);
 }

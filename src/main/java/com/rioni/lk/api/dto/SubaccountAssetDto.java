@@ -3,6 +3,7 @@ package com.rioni.lk.api.dto;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.rioni.lk.api.model.SubaccountAsset;
 import com.rioni.lk.api.model.Asset;
+import com.rioni.lk.api.config.LogosConfig;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,8 +12,8 @@ import java.math.RoundingMode;
 import org.springframework.core.io.ClassPathResource;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class SubaccountAssetDto {
     private int subaccountId;
     private int assetId;
@@ -46,7 +47,7 @@ public class SubaccountAssetDto {
         String logoPath = "/images/logos/" + saa.getAsset().getAssetId() + ".png";
         try {
             new ClassPathResource("static" + logoPath).getInputStream().close();
-            this.logo = "http://51.250.101.25:8080" + logoPath;
+            this.logo = LogosConfig.LOGOS_BASE_URL + logoPath;
         } catch (Exception e) {
             this.logo = null;
         }

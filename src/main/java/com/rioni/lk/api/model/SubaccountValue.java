@@ -24,9 +24,12 @@ public class SubaccountValue {
     @Column(name = "balance_value", columnDefinition = "DECIMAL(19,2)")
     private BigDecimal balanceValue;
 
-    @Column(name = "non_trading_value", columnDefinition = "DECIMAL(19,2)")
-    private BigDecimal nonTradingValue;
+    @Column(name = "non_trading_saldo", columnDefinition = "DECIMAL(19,2)")
+    private BigDecimal nonTradingSaldo;
 
     @Column(name = "tax_saldo", columnDefinition = "DECIMAL(19,2)")
     private BigDecimal taxSaldo;
+
+    @Column(name = "non_trading_value", columnDefinition = "DECIMAL(19,2)")
+    private BigDecimal nonTradingValue;
 }
