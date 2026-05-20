@@ -1,6 +1,7 @@
 package com.rioni.lk.api.dto;
 
 public enum Timeframe {
+    DAY("day"),
     WEEK("week"),
     MONTH("month"),
     SIX_MONTHS("sixMonths"),

@@ -15,6 +15,7 @@ import java.util.List;
 import com.rioni.lk.api.service.AccountService;
 import com.rioni.lk.api.service.PortfolioService;
 import com.rioni.lk.api.dto.AccountResponse;
+import com.rioni.lk.api.dto.AccountYieldDto;
 import com.rioni.lk.api.dto.PortfolioValueDto;
 import com.rioni.lk.api.dto.Timeframe;
 
@@ -45,5 +46,14 @@ public class PortfolioController {
         Timeframe tf = Timeframe.fromValue(timeframe);
         List<PortfolioValueDto> portfolioValues = portfolioService.getPortfolioValuesByAccountId(accountId, tf);
         return new ResponseEntity<>(portfolioValues, HttpStatus.OK);
+    }
+
+    @GetMapping("/portfolio/{accountId}/yield")
+    public ResponseEntity<AccountYieldDto> getAccountYield(
+            @PathVariable Integer accountId,
+            @RequestParam(required = false, defaultValue = "day") String period) {
+        Timeframe timeframe = Timeframe.fromValue(period);
+        AccountYieldDto yield = portfolioService.getAccountYield(accountId, timeframe);
+        return new ResponseEntity<>(yield, HttpStatus.OK);
     }
 }
