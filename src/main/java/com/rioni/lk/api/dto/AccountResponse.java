@@ -6,6 +6,5 @@ import java.util.List;
 
 @Data
 public class AccountResponse {
-    private BigDecimal totalSum;
     private List<AccountDto> accounts;
 }

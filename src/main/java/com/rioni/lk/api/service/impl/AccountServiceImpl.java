@@ -44,11 +44,6 @@ public class AccountServiceImpl implements AccountService {
                 })
                 .collect(Collectors.toList());
 
-        BigDecimal totalSum = accounts.stream()
-                .map(AccountDto::getBalance)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        response.setTotalSum(totalSum);
         response.setAccounts(accounts);
         return response;
     }
