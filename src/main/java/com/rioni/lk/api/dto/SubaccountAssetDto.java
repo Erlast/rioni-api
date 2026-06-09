@@ -48,6 +48,7 @@ public class SubaccountAssetDto {
         try {
             new ClassPathResource("static" + logoPath).getInputStream().close();
             this.logo = LogosConfig.LOGOS_BASE_URL + logoPath;
+           // this.logo = logoPath;
         } catch (Exception e) {
             this.logo = null;
         }

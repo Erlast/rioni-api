@@ -3,6 +3,7 @@ package com.rioni.lk.api.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,8 +34,14 @@ public class PortfolioController {
         this.portfolioService = portfolioService;
     }
 
-    @GetMapping("/portfolios/{profileId}")
-    public ResponseEntity<AccountResponse> getAccounts(@PathVariable Long profileId) {
+    private Long getCurrentProfileId() {
+        Integer profileId = (Integer) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return profileId.longValue();
+    }
+
+    @GetMapping("/portfolios")
+    public ResponseEntity<AccountResponse> getAccounts() {
+        Long profileId = getCurrentProfileId();
         AccountResponse accounts = accountService.getAllAccountsByProfileId(profileId);
         return new ResponseEntity<>(accounts, HttpStatus.OK);
     }

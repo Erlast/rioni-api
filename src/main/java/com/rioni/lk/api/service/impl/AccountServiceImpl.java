@@ -35,8 +35,7 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public AccountResponse getAllAccountsByProfileId(Long profileId) {
         AccountResponse response = new AccountResponse();
-        List<AccountDto> accounts = accountRepository.findAll().stream()
-                .filter(acc -> acc.getProfileId() == profileId)
+        List<AccountDto> accounts = accountRepository.findByProfileId(profileId.intValue()).stream()
                 .map(acc -> {
                     AccountDto dto = new AccountDto(acc);
                     calculateAccountSums(dto);

@@ -20,6 +20,7 @@ public class Profile {
     private String Ndu;
     private String Surname;
     private String Nickname;
+    @Column(name = "login")
     private String Login;
     private String Patronymic;
     @Column(columnDefinition = "text")

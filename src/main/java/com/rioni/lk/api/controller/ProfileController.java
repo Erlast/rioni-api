@@ -3,6 +3,7 @@ package com.rioni.lk.api.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -42,89 +43,105 @@ public class ProfileController {
         this.profileService = profileService;
     }
 
-    @GetMapping("/profile/{userId}")
-    public ResponseEntity<ProfileResponseDto> getProfile(@PathVariable Long userId) {
-        ProfileResponseDto profile = profileService.getProfileById(userId);
+    private Long getCurrentProfileId() {
+        Integer profileId = (Integer) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return profileId.longValue();
+    }
+
+    @GetMapping("/profile/me")
+    public ResponseEntity<ProfileResponseDto> getProfile() {
+        Long profileId = getCurrentProfileId();
+        ProfileResponseDto profile = profileService.getProfileById(profileId);
         if (profile == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<>(profile, HttpStatus.OK);
     }
 
-    @PatchMapping("/profile/{userId}")
-    public ResponseEntity<ProfileResponseDto> saveProfile(@PathVariable Long userId, @RequestBody ProfileDto profileDto) {
-        ProfileResponseDto saved = profileService.saveProfile(userId, profileDto);
+    @PatchMapping("/profile/me")
+    public ResponseEntity<ProfileResponseDto> saveProfile(@RequestBody ProfileDto profileDto) {
+        Long profileId = getCurrentProfileId();
+        ProfileResponseDto saved = profileService.saveProfile(profileId, profileDto);
         if (saved == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<>(saved, HttpStatus.OK);
     }
 
-    @PutMapping("/profile/{userId}/contacts")
-    public ResponseEntity<Void> saveContacts(@PathVariable Long userId, @RequestBody List<ProfileContactDto> contacts) {
-        boolean result = profileService.saveContacts(userId, contacts);
+    @PutMapping("/profile/me/contacts")
+    public ResponseEntity<Void> saveContacts(@RequestBody List<ProfileContactDto> contacts) {
+        Long profileId = getCurrentProfileId();
+        boolean result = profileService.saveContacts(profileId, contacts);
         if (!result) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @PutMapping("/profile/{userId}/addresses")
-    public ResponseEntity<Void> saveAddresses(@PathVariable Long userId, @RequestBody List<ProfileAddressDto> addresses) {
-        boolean result = profileService.saveAddresses(userId, addresses);
+    @PutMapping("/profile/me/addresses")
+    public ResponseEntity<Void> saveAddresses(@RequestBody List<ProfileAddressDto> addresses) {
+        Long profileId = getCurrentProfileId();
+        boolean result = profileService.saveAddresses(profileId, addresses);
         if (!result) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @GetMapping("/profile/{userId}/tax-residences")
-    public ResponseEntity<List<TaxResidenceDto>> getTaxResidences(@PathVariable Long userId) {
-        List<TaxResidenceDto> taxResidences = profileService.getTaxResidences(userId);
+    @GetMapping("/profile/me/tax-residences")
+    public ResponseEntity<List<TaxResidenceDto>> getTaxResidences() {
+        Long profileId = getCurrentProfileId();
+        List<TaxResidenceDto> taxResidences = profileService.getTaxResidences(profileId);
         return new ResponseEntity<>(taxResidences, HttpStatus.OK);
     }
 
-    @GetMapping("/profile/{userId}/residence-permits")
-    public ResponseEntity<List<ResidencePermitDto>> getResidencePermits(@PathVariable Long userId) {
-        List<ResidencePermitDto> residencePermits = profileService.getResidencePermits(userId);
+    @GetMapping("/profile/me/residence-permits")
+    public ResponseEntity<List<ResidencePermitDto>> getResidencePermits() {
+        Long profileId = getCurrentProfileId();
+        List<ResidencePermitDto> residencePermits = profileService.getResidencePermits(profileId);
         return new ResponseEntity<>(residencePermits, HttpStatus.OK);
     }
 
-    @PutMapping("/profile/{userId}/tax-residences")
-    public ResponseEntity<Void> saveTaxResidences(@PathVariable Long userId, @RequestBody List<TaxResidenceDto> taxResidences) {
-        boolean result = profileService.saveTaxResidences(userId, taxResidences);
+    @PutMapping("/profile/me/tax-residences")
+    public ResponseEntity<Void> saveTaxResidences(@RequestBody List<TaxResidenceDto> taxResidences) {
+        Long profileId = getCurrentProfileId();
+        boolean result = profileService.saveTaxResidences(profileId, taxResidences);
         if (!result) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @PutMapping("/profile/{userId}/residence-permits")
-    public ResponseEntity<Void> saveResidencePermits(@PathVariable Long userId, @RequestBody List<ResidencePermitDto> residencePermits) {
-        boolean result = profileService.saveResidencePermits(userId, residencePermits);
+    @PutMapping("/profile/me/residence-permits")
+    public ResponseEntity<Void> saveResidencePermits(@RequestBody List<ResidencePermitDto> residencePermits) {
+        Long profileId = getCurrentProfileId();
+        boolean result = profileService.saveResidencePermits(profileId, residencePermits);
         if (!result) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @GetMapping("/profile/{userId}/bank-accounts")
-    public ResponseEntity<List<BankAccountDto>> getBankAccounts(@PathVariable Long userId) {
-        List<BankAccountDto> bankAccounts = profileService.getBankAccounts(userId);
+    @GetMapping("/profile/me/bank-accounts")
+    public ResponseEntity<List<BankAccountDto>> getBankAccounts() {
+        Long profileId = getCurrentProfileId();
+        List<BankAccountDto> bankAccounts = profileService.getBankAccounts(profileId);
         return new ResponseEntity<>(bankAccounts, HttpStatus.OK);
     }
 
-    @PutMapping("/profile/{userId}/bank-accounts")
-    public ResponseEntity<Void> saveBankAccounts(@PathVariable Long userId, @RequestBody List<BankAccountDto> bankAccounts) {
-        boolean result = profileService.saveBankAccounts(userId, bankAccounts);
+    @PutMapping("/profile/me/bank-accounts")
+    public ResponseEntity<Void> saveBankAccounts(@RequestBody List<BankAccountDto> bankAccounts) {
+        Long profileId = getCurrentProfileId();
+        boolean result = profileService.saveBankAccounts(profileId, bankAccounts);
         if (!result) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @PostMapping(value = "/profile/{userId}/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Map<String, String>> saveAvatar(@PathVariable Long userId, @RequestParam("file") MultipartFile file) {
+    @PostMapping(value = "/profile/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Map<String, String>> saveAvatar(@RequestParam("file") MultipartFile file) {
+        Long profileId = getCurrentProfileId();
         try {
             String contentType = file.getContentType();
             if (contentType == null) {
@@ -145,7 +162,7 @@ public class ProfileController {
             byte[] imageBytes = file.getBytes();
             String base64Image = "data:" + contentType + ";base64," + Base64.getEncoder().encodeToString(imageBytes);
 
-            boolean result = profileService.saveAvatar(userId, base64Image);
+            boolean result = profileService.saveAvatar(profileId, base64Image);
             if (!result) {
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
             }
