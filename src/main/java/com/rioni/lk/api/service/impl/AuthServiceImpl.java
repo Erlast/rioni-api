@@ -123,6 +123,10 @@ public class AuthServiceImpl implements AuthService {
         
         SmsCode smsCode = smsCodeOpt.get();
         
+        if (smsCode.isUsed()) {
+            throw new RuntimeException("SMS code already used");
+        }
+        
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime createdAt = smsCode.getCreatedAt();
         LocalDateTime expiresAt = createdAt.plusMinutes(SMS_CODE_VALIDITY_MINUTES);
@@ -145,6 +149,9 @@ public class AuthServiceImpl implements AuthService {
         }
         
         int profileId = phoneContact.get().getProfileId();
+        
+        smsCode.setUsed(true);
+        smsCodeRepository.save(smsCode);
         
         String accessToken = generateAccessToken(profileId);
         String refreshToken = generateRefreshToken(profileId);

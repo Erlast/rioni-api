@@ -26,4 +26,7 @@ public class SmsCode {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Column(name = "is_used")
+    private boolean isUsed;
 }

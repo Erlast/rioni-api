@@ -36,6 +36,10 @@ public class FlywayConfig {
             logger.info("Pending migrations: {}", flyway.info().pending().length);
             logger.info("Applied migrations: {}", flyway.info().applied().length);
 
+            logger.info("Executing repair() first to fix any checksum mismatches...");
+            flyway.repair();
+            logger.info("Repair completed");
+
             logger.info("Executing migrate()...");
             var result = flyway.migrate();
             logger.info("Migrate() result - migrationsExecuted: {}", result.migrationsExecuted);

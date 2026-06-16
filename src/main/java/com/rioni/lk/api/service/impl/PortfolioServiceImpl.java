@@ -64,12 +64,12 @@ public class PortfolioServiceImpl implements PortfolioService {
         BigDecimal currentVal = currentBalance.get();
         BigDecimal previousVal = previousBalance.get();
 
-        BigDecimal accountYield = previousVal.subtract(currentVal);
+        BigDecimal accountYield = currentVal.subtract(previousVal);
 
         BigDecimal accountPercent = BigDecimal.ZERO;
-        if (previousVal.compareTo(BigDecimal.ZERO) != 0) {
+        if (previousVal.abs().compareTo(BigDecimal.ZERO) != 0) {
             accountPercent = accountYield
-                    .divide(previousVal, 4, RoundingMode.HALF_UP)
+                    .divide(previousVal.abs(), 4, RoundingMode.HALF_UP)
                     .multiply(BigDecimal.valueOf(100))
                     .setScale(2, RoundingMode.HALF_UP);
         }
