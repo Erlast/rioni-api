@@ -17,10 +17,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/profile/avatars/**")
-            .addResourceLocations("file:" + storagePath + "/");
-    }
-
+    registry.addResourceHandler("/profile/avatars/**")
+        .addResourceLocations("file:" + storagePath + "/");
+    registry.addResourceHandler("/images/**")
+        .addResourceLocations("classpath:/static/");
+}
     public String getBaseUrl() {
         return baseUrl;
     }
