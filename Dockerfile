@@ -1,4 +1,3 @@
-
 FROM openjdk:24-ea-jdk-slim-bullseye
 
 
