@@ -44,14 +44,14 @@ public class SubaccountAssetDto {
         this.bid = row[3] != null ? (Integer) row[3] : 0;
         this.ask = row[4] != null ? (Integer) row[4] : 0;
         this.profit = this.balanceValue - this.investedValue.intValue();
-        String logoPath = "/images/logos/" + saa.getAsset().getAssetId() + ".png";
-        try {
-            new ClassPathResource("static" + logoPath).getInputStream().close();
-            this.logo = LogosConfig.LOGOS_BASE_URL + logoPath;
+        String logoPath = saa.getAsset().getAssetId() + ".png";
+        //try {
+            //new ClassPathResource("static" + logoPath).getInputStream().close();
+            this.logo = logoPath;
            // this.logo = logoPath;
-        } catch (Exception e) {
-            this.logo = null;
-        }
+       // } catch (Exception e) {
+           // this.logo = null;
+      //  }
 
         this.active = true;
 
