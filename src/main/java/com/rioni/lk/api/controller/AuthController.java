@@ -31,9 +31,13 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/refresh")
-    public ResponseEntity<AuthResponse> refresh(@RequestBody RefreshTokenRequest request) {
-        AuthResponse response = authService.refreshToken(request.getRefreshToken());
+    @GetMapping("/refresh")
+    public ResponseEntity<AuthResponse> refresh(Authentication authentication) {
+        if (authentication == null || authentication.getPrincipal() == null) {
+            return ResponseEntity.status(401).build();
+        }
+        Integer profileId = (Integer) authentication.getPrincipal();
+        AuthResponse response = authService.refreshToken(profileId);
         return ResponseEntity.ok(response);
     }
 
@@ -44,17 +48,5 @@ public class AuthController {
             authService.logout(profileId);
         }
         return ResponseEntity.ok().build();
-    }
-
-    public static class RefreshTokenRequest {
-        private String refreshToken;
-
-        public String getRefreshToken() {
-            return refreshToken;
-        }
-
-        public void setRefreshToken(String refreshToken) {
-            this.refreshToken = refreshToken;
-        }
     }
 }

@@ -9,6 +9,7 @@ import com.rioni.lk.api.dto.Nullable;
 import com.rioni.lk.api.model.Profile;
 import com.rioni.lk.api.model.ProfileContact;
 import com.rioni.lk.api.model.ProfileAddress;
+import com.rioni.lk.api.util.PhoneUtils;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -93,7 +94,7 @@ public class ProfileMapper {
         if (dto.getCompanyName() != null && dto.getCompanyName().wasSent()) profile.setCompanyName((String) dto.getCompanyName().getValue());
         if (dto.getCompanyIndustry() != null && dto.getCompanyIndustry().wasSent()) profile.setCompanyIndustry((String) dto.getCompanyIndustry().getValue());
         if (dto.getCompanyPosition() != null && dto.getCompanyPosition().wasSent()) profile.setCompanyPosition((String) dto.getCompanyPosition().getValue());
-        if (dto.getCompanyPhone() != null && dto.getCompanyPhone().wasSent()) profile.setCompanyPhone((String) dto.getCompanyPhone().getValue());
+        if (dto.getCompanyPhone() != null && dto.getCompanyPhone().wasSent()) profile.setCompanyPhone(PhoneUtils.normalize((String) dto.getCompanyPhone().getValue()));
         if (dto.getCompanyWebsite() != null && dto.getCompanyWebsite().wasSent()) profile.setCompanyWebsite((String) dto.getCompanyWebsite().getValue());
         if (dto.getIsNpo() != null && dto.getIsNpo().wasSent()) profile.setIsNpo((Boolean) dto.getIsNpo().getValue());
         if (dto.getIsNgo() != null && dto.getIsNgo().wasSent()) profile.setIsNgo((Boolean) dto.getIsNgo().getValue());

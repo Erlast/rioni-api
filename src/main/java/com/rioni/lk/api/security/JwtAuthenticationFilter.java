@@ -1,5 +1,6 @@
 package com.rioni.lk.api.security;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.FilterChain;
@@ -60,6 +61,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
+        } catch (ExpiredJwtException e) {
+            // Allow expired access tokens through for refresh endpoint
+            String tokenType = e.getClaims().get("tokenType", String.class);
+            if ("access".equals(tokenType)) {
+                String profileIdStr = e.getClaims().getSubject();
+                Integer profileId = Integer.parseInt(profileIdStr);
+
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(profileId, null, Collections.emptyList());
+
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
         } catch (Exception e) {
             SecurityContextHolder.clearContext();
         }
@@ -69,10 +82,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-    String path = request.getRequestURI();
-    return path.equals("/api/auth/login") 
-        || path.equals("/api/auth/refresh") 
-        || path.equals("/api/auth/check_sms")
-        || path.startsWith("/images/");
-}
+	    String path = request.getRequestURI();
+	    return path.equals("/api/auth/login") 
+	        || path.equals("/api/auth/check_sms")
+	        || path.startsWith("/images/");
+	}
 }

@@ -21,6 +21,7 @@ import com.rioni.lk.api.model.ProfileAddress;
 import com.rioni.lk.api.model.TaxResidence;
 import com.rioni.lk.api.model.ResidencePermit;
 import com.rioni.lk.api.model.BankAccount;
+import com.rioni.lk.api.util.PhoneUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -76,7 +77,11 @@ public class ProfileServiceImpl implements ProfileService {
             contact.setProfileId(profileId.intValue());
             contact.setContactType(contactDto.getContactType());
             contact.setIsMain(contactDto.getIsMain());
-            contact.setValue(contactDto.getValue());
+            String value = contactDto.getValue();
+            if ("phone".equals(contactDto.getContactType())) {
+                value = PhoneUtils.normalize(value);
+            }
+            contact.setValue(value);
             contact.setIsConfirmed(contactDto.getIsConfirmed());
             if (contactDto.getId() != 0) {
                 contact.setId(contactDto.getId());

@@ -10,6 +10,7 @@ import com.rioni.lk.api.repository.ProfileContactRepository;
 import com.rioni.lk.api.repository.ProfilePasswordRepository;
 import com.rioni.lk.api.repository.SmsCodeRepository;
 import com.rioni.lk.api.service.AuthService;
+import com.rioni.lk.api.util.PhoneUtils;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -82,7 +83,7 @@ public class AuthServiceImpl implements AuthService {
         String code = DEV_SMS_CODE;
         
         SmsCode smsCode = new SmsCode();
-        smsCode.setPhone(phone);
+        smsCode.setPhone(PhoneUtils.normalize(phone));
         smsCode.setCode(code);
         smsCode.setCreatedAt(LocalDateTime.now());
         
@@ -103,7 +104,7 @@ public class AuthServiceImpl implements AuthService {
         String code = DEV_SMS_CODE;
         
         SmsCode smsCode = new SmsCode();
-        smsCode.setPhone(phone);
+        smsCode.setPhone(PhoneUtils.normalize(phone));
         smsCode.setCode(code);
         smsCode.setCreatedAt(LocalDateTime.now());
         
@@ -167,35 +168,18 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public AuthResponse refreshToken(String refreshToken) {
-        try {
-            var claims = Jwts.parser()
-                    .verifyWith(secretKey)
-                    .build()
-                    .parseSignedClaims(refreshToken)
-                    .getPayload();
-            
-            String tokenType = claims.get("tokenType", String.class);
-            if (!"refresh".equals(tokenType)) {
-                throw new RuntimeException("Invalid refresh token");
-            }
-            
-            int profileId = claims.get("profileId", Integer.class);
-            
-            String newAccessToken = generateAccessToken(profileId);
-            String newRefreshToken = generateRefreshToken(profileId);
-            
-            return new AuthResponse(
-                    newAccessToken,
-                    "Bearer",
-                    newRefreshToken,
-                    accessTokenExpiration,
-                    refreshTokenExpiration,
-                    null
-            );
-        } catch (Exception e) {
-            throw new RuntimeException("Invalid refresh token");
-        }
+    public AuthResponse refreshToken(int profileId) {
+        String newAccessToken = generateAccessToken(profileId);
+        String newRefreshToken = generateRefreshToken(profileId);
+
+        return new AuthResponse(
+                newAccessToken,
+                "Bearer",
+                newRefreshToken,
+                accessTokenExpiration,
+                refreshTokenExpiration,
+                null
+        );
     }
 
     private String generateAccessToken(int profileId) {

@@ -19,6 +19,21 @@ public interface SubaccountAssetRepository extends JpaRepository<SubaccountAsset
             "join saa.subaccount s " +
             "join s.account a " +
             "where a.profileId = :profileId " +
-            "and (:assetTypeCode is null or ast.assetTypeCode = :assetTypeCode)")
-    List<Object[]> findByProfileId(@Param("profileId") Integer profileId, @Param("assetTypeCode") String assetTypeCode);
+            "and (:assetTypeCode is null or ast.assetTypeCode = :assetTypeCode) " +
+            "and (:search is null or :search = '' or lower(ast.assetName) like lower(concat('%', :search, '%')) or lower(ast.baseTicker) like lower(concat('%', :search, '%')))")
+    List<Object[]> findByProfileId(@Param("profileId") Integer profileId,
+                                   @Param("assetTypeCode") String assetTypeCode,
+                                   @Param("search") String search);
+
+    @Query("select count(saa) " +
+            "from SubaccountAsset saa " +
+            "join saa.asset ast " +
+            "join saa.subaccount s " +
+            "join s.account a " +
+            "where a.profileId = :profileId " +
+            "and (:assetTypeCode is null or ast.assetTypeCode = :assetTypeCode) " +
+            "and (:search is null or :search = '' or lower(ast.assetName) like lower(concat('%', :search, '%')) or lower(ast.baseTicker) like lower(concat('%', :search, '%')))")
+    long countByProfileId(@Param("profileId") Integer profileId,
+                          @Param("assetTypeCode") String assetTypeCode,
+                          @Param("search") String search);
 }

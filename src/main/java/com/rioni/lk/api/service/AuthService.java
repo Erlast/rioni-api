@@ -8,6 +8,6 @@ public interface AuthService {
     AuthResponse authenticate(AuthRequest request);
     SmsCodeResponse sendSmsCode(String phone);
     AuthResponse checkSmsCode(long smsCodeId, String code);
-    AuthResponse refreshToken(String refreshToken);
+    AuthResponse refreshToken(int profileId);
     void logout(int profileId);
 }

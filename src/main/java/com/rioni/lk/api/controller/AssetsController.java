@@ -32,9 +32,13 @@ public class AssetsController {
      }
 
      @GetMapping("/portfolio/assets")
-     public ResponseEntity<SubaccountAssetsResponse> getAssets(@RequestParam(required = false) String types) {
+     public ResponseEntity<SubaccountAssetsResponse> getAssets(
+             @RequestParam(required = false) String types,
+             @RequestParam(required = false, defaultValue = "1") int page,
+             @RequestParam(required = false, defaultValue = "10") int perPage,
+             @RequestParam(required = false) String search) {
         Long profileId = getCurrentProfileId();
-        SubaccountAssetsResponse assets = subaccountAssetService.getAllAssetsByProfileId(profileId, types);
+        SubaccountAssetsResponse assets = subaccountAssetService.getAllAssetsByProfileId(profileId, types, page, perPage, search);
         return new ResponseEntity<>(assets, HttpStatus.OK);
      }
 }

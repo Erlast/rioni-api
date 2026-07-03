@@ -12,4 +12,8 @@ import java.util.List;
 public class SubaccountAssetsResponse {
     private List<SubaccountAssetDto> assets;
     private ProfitDto profit;
+    private int page;
+    private int perPage;
+    private long total;
+    private int totalPages;
 }
