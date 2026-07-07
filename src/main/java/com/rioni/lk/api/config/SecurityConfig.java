@@ -39,7 +39,7 @@ public class SecurityConfig {
         }))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/login", "/api/auth/check_sms").permitAll()
+                .requestMatchers("/api/auth/login", "/api/auth/check_sms", "/api/health", "/uploads/**").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(requestLoggingFilter, LogoutFilter.class)

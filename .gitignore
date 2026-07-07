@@ -32,9 +32,11 @@ out/
 /dist/
 /nbdist/
 /.nb-gradle/
+/uploads/
 
 ### VS Code ###
 .vscode/
 
 ### Environment ###
 .env
+/uploads/

@@ -13,6 +13,8 @@ services:
     ports:
       - '${API_PORT:-8081}:8080'
       - '5005:5005'
+    volumes:
+      - ./uploads:/app/uploads
     restart: unless-stopped
     networks:
       - dev
