@@ -4,4 +4,6 @@ import com.rioni.lk.api.dto.SubaccountAssetsResponse;
 
 public interface SubaccountAssetService {
     SubaccountAssetsResponse getAllAssetsByProfileId(Long profileId, String assetTypeCode, int page, int perPage, String search);
+
+    SubaccountAssetsResponse getAllAssetsByAccountId(Integer accountId, String assetTypeCode, int page, int perPage, String search);
 }

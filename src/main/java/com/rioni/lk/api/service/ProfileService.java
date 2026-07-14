@@ -8,6 +8,7 @@ import com.rioni.lk.api.dto.TaxResidenceDto;
 import com.rioni.lk.api.dto.ResidencePermitDto;
 import com.rioni.lk.api.dto.BankAccountDto;
 import java.util.List;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface ProfileService {
 
@@ -31,6 +32,8 @@ public interface ProfileService {
 
     boolean saveBankAccounts(Long profileId, List<BankAccountDto> bankAccounts);
 
-    boolean saveAvatar(Long profileId, String base64Image);
+    boolean saveAvatar(Long profileId, MultipartFile file);
+
+    boolean deleteAvatar(Long profileId);
 
 }

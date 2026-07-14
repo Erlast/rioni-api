@@ -36,4 +36,30 @@ public interface SubaccountAssetRepository extends JpaRepository<SubaccountAsset
     long countByProfileId(@Param("profileId") Integer profileId,
                           @Param("assetTypeCode") String assetTypeCode,
                           @Param("search") String search);
+
+    @Query("select saa, " +
+            "cast(round(saa.purchasePrice * saa.amount, 2) as BigDecimal) as investedValue, " +
+           "(select q.quoteValue from Quote q where q.assetId = ast.assetId and q.quoteTypeCode = 'last' order by q.date desc fetch first 1 rows only) as balanceValue, " +
+            "(select q.quoteValue from Quote q where q.assetId = ast.assetId and q.quoteTypeCode = 'bid' order by q.date desc fetch first 1 rows only) as bid, " +
+            "(select q.quoteValue from Quote q where q.assetId = ast.assetId and q.quoteTypeCode = 'ask' order by q.date desc fetch first 1 rows only) as ask " +
+            "from SubaccountAsset saa " +
+            "join fetch saa.asset ast " +
+            "join saa.subaccount s " +
+            "where s.accountId = :accountId " +
+            "and (:assetTypeCode is null or ast.assetTypeCode = :assetTypeCode) " +
+            "and (:search is null or :search = '' or lower(ast.assetName) like lower(concat('%', :search, '%')) or lower(ast.baseTicker) like lower(concat('%', :search, '%')))")
+    List<Object[]> findByAccountId(@Param("accountId") Integer accountId,
+                                   @Param("assetTypeCode") String assetTypeCode,
+                                   @Param("search") String search);
+
+    @Query("select count(saa) " +
+            "from SubaccountAsset saa " +
+            "join saa.asset ast " +
+            "join saa.subaccount s " +
+            "where s.accountId = :accountId " +
+            "and (:assetTypeCode is null or ast.assetTypeCode = :assetTypeCode) " +
+            "and (:search is null or :search = '' or lower(ast.assetName) like lower(concat('%', :search, '%')) or lower(ast.baseTicker) like lower(concat('%', :search, '%')))")
+    long countByAccountId(@Param("accountId") Integer accountId,
+                          @Param("assetTypeCode") String assetTypeCode,
+                          @Param("search") String search);
 }

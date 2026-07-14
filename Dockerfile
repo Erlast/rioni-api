@@ -25,9 +25,7 @@ RUN gradle build -x compileTestJava
 
 ENV JAR_NAME=api-1.0.0.jar
 ENV APP_HOME=/app
-ENV SPRING_PROFILES_ACTIVE=prod
-
 EXPOSE 8080 5005
 
 
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -Dspring.profiles.active=$SPRING_PROFILES_ACTIVE -jar $APP_HOME/build/libs/$JAR_NAME"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar $APP_HOME/build/libs/$JAR_NAME"]

@@ -116,4 +116,39 @@ public class FileUploadServiceImpl implements FileUploadService {
             throw new RuntimeException("Failed to save file", e);
         }
     }
+
+    @Override
+    public boolean deleteFile(Long profileId, String fileName, String path) {
+        if (fileName == null || fileName.isEmpty()) {
+            log.warn("deleteFile called with null or empty fileName for profileId={}", profileId);
+            return false;
+        }
+
+        // Build directory path: {storagePath}/{profileId}/{optional path}
+        Path userDir = Paths.get(storagePath, String.valueOf(profileId)).toAbsolutePath().normalize();
+        Path targetDir = userDir;
+
+        if (path != null && !path.trim().isEmpty()) {
+            String normalizedPath = path.trim().replaceAll("^/+|/+$", "");
+            if (!normalizedPath.isEmpty()) {
+                targetDir = userDir.resolve(normalizedPath);
+            }
+        }
+
+        Path targetFile = targetDir.resolve(fileName).normalize();
+        log.debug("Attempting to delete file: {}", targetFile);
+
+        try {
+            boolean deleted = Files.deleteIfExists(targetFile);
+            if (deleted) {
+                log.info("File deleted successfully: {}", targetFile);
+            } else {
+                log.warn("File not found, could not delete: {}", targetFile);
+            }
+            return deleted;
+        } catch (IOException e) {
+            log.error("Failed to delete file: {}", targetFile, e);
+            return false;
+        }
+    }
 }

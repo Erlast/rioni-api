@@ -28,6 +28,22 @@ public class SubaccountAssetsServiceImpl implements SubaccountAssetService {
 
         long total = subaccountAssetRepository.countByProfileId(profileId.intValue(), assetTypeCode, search);
 
+        return buildResponse(allAssets, total, page, perPage);
+    }
+
+    @Override
+    public SubaccountAssetsResponse getAllAssetsByAccountId(Integer accountId, String assetTypeCode, int page, int perPage, String search) {
+        List<SubaccountAssetDto> allAssets = ((List<Object[]>) subaccountAssetRepository.findByAccountId(
+                accountId, assetTypeCode, search)).stream()
+                .map(row -> new SubaccountAssetDto(row))
+                .collect(Collectors.toList());
+
+        long total = subaccountAssetRepository.countByAccountId(accountId, assetTypeCode, search);
+
+        return buildResponse(allAssets, total, page, perPage);
+    }
+
+    private SubaccountAssetsResponse buildResponse(List<SubaccountAssetDto> allAssets, long total, int page, int perPage) {
         int totalPages = (int) Math.ceil((double) total / perPage);
         if (totalPages == 0) totalPages = 1;
         if (page < 1) page = 1;

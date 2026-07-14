@@ -15,9 +15,11 @@ import java.util.List;
 
 import com.rioni.lk.api.service.AccountService;
 import com.rioni.lk.api.service.PortfolioService;
+import com.rioni.lk.api.service.SubaccountAssetService;
 import com.rioni.lk.api.dto.AccountResponse;
 import com.rioni.lk.api.dto.AccountYieldDto;
 import com.rioni.lk.api.dto.PortfolioValueDto;
+import com.rioni.lk.api.dto.SubaccountAssetsResponse;
 import com.rioni.lk.api.dto.Timeframe;
 
 @RestController
@@ -27,11 +29,14 @@ public class PortfolioController {
 
     private final AccountService accountService;
     private final PortfolioService portfolioService;
+    private final SubaccountAssetService subaccountAssetService;
 
     @Autowired
-    public PortfolioController(AccountService accountService, PortfolioService portfolioService) {
+    public PortfolioController(AccountService accountService, PortfolioService portfolioService,
+                               SubaccountAssetService subaccountAssetService) {
         this.accountService = accountService;
         this.portfolioService = portfolioService;
+        this.subaccountAssetService = subaccountAssetService;
     }
 
     private Long getCurrentProfileId() {
@@ -62,5 +67,16 @@ public class PortfolioController {
         Timeframe timeframe = Timeframe.fromValue(period);
         AccountYieldDto yield = portfolioService.getAccountYield(accountId, timeframe);
         return new ResponseEntity<>(yield, HttpStatus.OK);
+    }
+
+    @GetMapping("/portfolio/{accountId}/assets")
+    public ResponseEntity<SubaccountAssetsResponse> getAccountAssets(
+            @PathVariable Integer accountId,
+            @RequestParam(required = false) String types,
+            @RequestParam(required = false, defaultValue = "1") int page,
+            @RequestParam(required = false, defaultValue = "10") int perPage,
+            @RequestParam(required = false) String search) {
+        SubaccountAssetsResponse assets = subaccountAssetService.getAllAssetsByAccountId(accountId, types, page, perPage, search);
+        return new ResponseEntity<>(assets, HttpStatus.OK);
     }
 }

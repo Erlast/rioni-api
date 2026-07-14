@@ -1,6 +1,7 @@
 package com.rioni.lk.api.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import com.rioni.lk.api.dto.ProfileDto;
 import com.rioni.lk.api.dto.ProfileResponseDto;
 import com.rioni.lk.api.dto.ProfileContactDto;
@@ -9,6 +10,7 @@ import com.rioni.lk.api.dto.TaxResidenceDto;
 import com.rioni.lk.api.dto.ResidencePermitDto;
 import com.rioni.lk.api.dto.BankAccountDto;
 import com.rioni.lk.api.service.ProfileService;
+import com.rioni.lk.api.service.FileUploadService;
 import com.rioni.lk.api.repository.ProfileRepository;
 import com.rioni.lk.api.repository.ProfileContactRepository;
 import com.rioni.lk.api.repository.ProfileAddressRepository;
@@ -24,25 +26,35 @@ import com.rioni.lk.api.model.BankAccount;
 import com.rioni.lk.api.util.PhoneUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.List;
 
 @Service
 public class ProfileServiceImpl implements ProfileService {
+    private static final Logger log = LoggerFactory.getLogger(ProfileServiceImpl.class);
+
     private final ProfileRepository profileRepository;
     private final ProfileContactRepository profileContactRepository;
     private final ProfileAddressRepository profileAddressRepository;
     private final TaxResidenceRepository taxResidenceRepository;
     private final ResidencePermitRepository residencePermitRepository;
     private final BankAccountRepository bankAccountRepository;
+    private final FileUploadService fileUploadService;
+
+    @Value("${app.uploads.base-url}")
+    private String uploadsBaseUrl;
 
     @Autowired
-    public ProfileServiceImpl(ProfileRepository profileRepository, ProfileContactRepository profileContactRepository, ProfileAddressRepository profileAddressRepository, TaxResidenceRepository taxResidenceRepository, ResidencePermitRepository residencePermitRepository, BankAccountRepository bankAccountRepository) {
+    public ProfileServiceImpl(ProfileRepository profileRepository, ProfileContactRepository profileContactRepository, ProfileAddressRepository profileAddressRepository, TaxResidenceRepository taxResidenceRepository, ResidencePermitRepository residencePermitRepository, BankAccountRepository bankAccountRepository, FileUploadService fileUploadService) {
         this.profileRepository = profileRepository;
         this.profileContactRepository = profileContactRepository;
         this.profileAddressRepository = profileAddressRepository;
         this.taxResidenceRepository = taxResidenceRepository;
         this.residencePermitRepository = residencePermitRepository;
         this.bankAccountRepository = bankAccountRepository;
+        this.fileUploadService = fileUploadService;
     }
 
     @Override
@@ -51,7 +63,13 @@ public class ProfileServiceImpl implements ProfileService {
                 .map(profile -> {
                     List<ProfileContact> contacts = profileContactRepository.findByProfileId(profile.getId());
                     List<ProfileAddress> addresses = profileAddressRepository.findByProfileId(profile.getId());
-                    return ProfileMapper.mapToDto(profile, contacts, addresses);
+                    ProfileResponseDto dto = ProfileMapper.mapToDto(profile, contacts, addresses);
+                    // Construct full avatar URL if filename is stored
+                    if (dto.getPhotoUrl() != null && !dto.getPhotoUrl().isEmpty()) {
+                        String avatarUrl = uploadsBaseUrl + profile.getId() + "/avatar/" + dto.getPhotoUrl();
+                        dto.setPhotoUrl(avatarUrl);
+                    }
+                    return dto;
                 })
                 .orElse(null);
     }
@@ -61,7 +79,13 @@ public class ProfileServiceImpl implements ProfileService {
         return profileRepository.findById(id)
                 .map(profile -> {
                     ProfileMapper.mapToEntity(profileDto, profile);
-                    return ProfileMapper.mapToDto(profileRepository.save(profile), List.of(), List.of());
+                    ProfileResponseDto dto = ProfileMapper.mapToDto(profileRepository.save(profile), List.of(), List.of());
+                    // Construct full avatar URL if filename is stored
+                    if (dto.getPhotoUrl() != null && !dto.getPhotoUrl().isEmpty()) {
+                        String avatarUrl = uploadsBaseUrl + profile.getId() + "/avatar/" + dto.getPhotoUrl();
+                        dto.setPhotoUrl(avatarUrl);
+                    }
+                    return dto;
                 })
                 .orElse(null);
     }
@@ -230,10 +254,42 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     @Transactional
-    public boolean saveAvatar(Long profileId, String base64Image) {
+    public boolean saveAvatar(Long profileId, MultipartFile file) {
         return profileRepository.findById(profileId)
                 .map(profile -> {
-                    profile.setPhotoUrl(base64Image);
+                    // Delete the previous avatar file if it exists
+                    String oldPhotoUrl = profile.getPhotoUrl();
+                    if (oldPhotoUrl != null && !oldPhotoUrl.isEmpty()) {
+                        log.info("Deleting previous avatar for profileId={}: {}", profileId, oldPhotoUrl);
+                        fileUploadService.deleteFile(profileId, oldPhotoUrl, "avatar");
+                    }
+
+                    // Upload new file using FileUploadService -> saves to uploads/<profileId>/avatar/<uuid>.ext
+                    String fileUrl = fileUploadService.uploadFile(profileId, file, "avatar");
+                    // Extract just the filename from the URL (last segment after /)
+                    String fileName = fileUrl.substring(fileUrl.lastIndexOf("/") + 1);
+                    // Save only the filename in the database
+                    profile.setPhotoUrl(fileName);
+                    profileRepository.save(profile);
+                    return true;
+                })
+                .orElse(false);
+    }
+
+    @Override
+    @Transactional
+    public boolean deleteAvatar(Long profileId) {
+        return profileRepository.findById(profileId)
+                .map(profile -> {
+                    String photoUrl = profile.getPhotoUrl();
+                    if (photoUrl == null || photoUrl.isEmpty()) {
+                        log.warn("deleteAvatar called for profileId={} but photoUrl is already null/empty", profileId);
+                        return false;
+                    }
+                    // Delete the physical file from storage
+                    fileUploadService.deleteFile(profileId, photoUrl, "avatar");
+                    // Set photoUrl to null in the database
+                    profile.setPhotoUrl(null);
                     profileRepository.save(profile);
                     return true;
                 })
