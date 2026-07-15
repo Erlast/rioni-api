@@ -1,15 +1,12 @@
 package com.rioni.lk.api.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.querydsl.core.Tuple;
 import com.rioni.lk.api.model.SubaccountAsset;
-import com.rioni.lk.api.model.Asset;
-import com.rioni.lk.api.config.LogosConfig;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 import java.math.BigDecimal;
-import java.math.RoundingMode;
-import org.springframework.core.io.ClassPathResource;
 
 @Data
 @NoArgsConstructor
@@ -22,7 +19,7 @@ public class SubaccountAssetDto {
     private int currencyId;
     private String assetName;
     private String baseTicker;
-    private BigDecimal investedValue; 
+    private BigDecimal investedValue;
     private int balanceValue;
     private int bid;
     private int ask;
@@ -30,30 +27,34 @@ public class SubaccountAssetDto {
     private String logo;
     private boolean active;
 
-    public SubaccountAssetDto(Object[] row) {
-        SubaccountAsset saa = (SubaccountAsset) row[0];
-        this.subaccountId= saa.getSubaccountId();
+    /**
+     * Build DTO from a Querydsl Tuple returned by {@code SubaccountAssetRepositoryCustom}.
+     * <p>Tuple layout:
+     *   [0] SubaccountAsset  (entity)
+     *   [1] BigDecimal       investedValue
+     *   [2] Integer          balanceValue  (last quote)
+     *   [3] Integer          bid
+     *   [4] Integer          ask
+     */
+    public SubaccountAssetDto(Tuple tuple) {
+        SubaccountAsset saa = tuple.get(0, SubaccountAsset.class);
+        this.subaccountId = saa.getSubaccountId();
         this.assetId = saa.getAssetId();
         this.amount = saa.getAmount();
         this.purchasePrice = saa.getPurchasePrice();
         this.currencyId = saa.getCurrencyId();
         this.assetName = saa.getAsset().getAssetName();
         this.baseTicker = saa.getAsset().getBaseTicker();
-        this.investedValue = (BigDecimal) row[1];
-        this.balanceValue = row[2] != null ? (Integer) row[2] : 0;
-        this.bid = row[3] != null ? (Integer) row[3] : 0;
-        this.ask = row[4] != null ? (Integer) row[4] : 0;
+        this.investedValue = tuple.get(1, BigDecimal.class);
+        this.balanceValue = valueOrZero(tuple.get(2, Integer.class));
+        this.bid = valueOrZero(tuple.get(3, Integer.class));
+        this.ask = valueOrZero(tuple.get(4, Integer.class));
         this.profit = this.balanceValue - this.investedValue.intValue();
-        String logoPath = saa.getAsset().getAssetId() + ".png";
-        //try {
-            //new ClassPathResource("static" + logoPath).getInputStream().close();
-            this.logo = logoPath;
-           // this.logo = logoPath;
-       // } catch (Exception e) {
-           // this.logo = null;
-      //  }
-
+        this.logo = saa.getAsset().getAssetId() + ".png";
         this.active = true;
+    }
 
+    private static int valueOrZero(Integer value) {
+        return value != null ? value : 0;
     }
 }

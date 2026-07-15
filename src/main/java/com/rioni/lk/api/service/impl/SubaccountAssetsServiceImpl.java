@@ -1,49 +1,64 @@
 package com.rioni.lk.api.service.impl;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import com.rioni.lk.api.dto.SubaccountAssetsResponse;
 import com.rioni.lk.api.dto.SubaccountAssetDto;
 import com.rioni.lk.api.dto.ProfitDto;
 import com.rioni.lk.api.service.SubaccountAssetService;
 import com.rioni.lk.api.repository.SubaccountAssetRepository;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class SubaccountAssetsServiceImpl implements SubaccountAssetService {
+
     private final SubaccountAssetRepository subaccountAssetRepository;
 
-    @Autowired
     public SubaccountAssetsServiceImpl(SubaccountAssetRepository subaccountAssetRepository) {
         this.subaccountAssetRepository = subaccountAssetRepository;
     }
 
     @Override
-    public SubaccountAssetsResponse getAllAssetsByProfileId(Long profileId, String assetTypeCode, int page, int perPage, String search) {
-        List<SubaccountAssetDto> allAssets = ((List<Object[]>) subaccountAssetRepository.findByProfileId(
-                profileId.intValue(), assetTypeCode, search)).stream()
-                .map(row -> new SubaccountAssetDto(row))
+    public SubaccountAssetsResponse getAllAssetsByProfileId(Long profileId,
+                                                            String assetTypeCode,
+                                                            int page,
+                                                            int perPage,
+                                                            String search) {
+        List<SubaccountAssetDto> allAssets = subaccountAssetRepository
+                .findAssetsByProfileId(profileId.intValue(), assetTypeCode, search)
+                .stream()
+                .map(SubaccountAssetDto::new)
                 .collect(Collectors.toList());
 
-        long total = subaccountAssetRepository.countByProfileId(profileId.intValue(), assetTypeCode, search);
+        long total = subaccountAssetRepository.countAssetsByProfileId(
+                profileId.intValue(), assetTypeCode, search);
 
         return buildResponse(allAssets, total, page, perPage);
     }
 
     @Override
-    public SubaccountAssetsResponse getAllAssetsByAccountId(Integer accountId, String assetTypeCode, int page, int perPage, String search) {
-        List<SubaccountAssetDto> allAssets = ((List<Object[]>) subaccountAssetRepository.findByAccountId(
-                accountId, assetTypeCode, search)).stream()
-                .map(row -> new SubaccountAssetDto(row))
+    public SubaccountAssetsResponse getAllAssetsByAccountId(Integer accountId,
+                                                            String assetTypeCode,
+                                                            int page,
+                                                            int perPage,
+                                                            String search) {
+        List<SubaccountAssetDto> allAssets = subaccountAssetRepository
+                .findAssetsByAccountId(accountId, assetTypeCode, search)
+                .stream()
+                .map(SubaccountAssetDto::new)
                 .collect(Collectors.toList());
 
-        long total = subaccountAssetRepository.countByAccountId(accountId, assetTypeCode, search);
+        long total = subaccountAssetRepository.countAssetsByAccountId(
+                accountId, assetTypeCode, search);
 
         return buildResponse(allAssets, total, page, perPage);
     }
 
-    private SubaccountAssetsResponse buildResponse(List<SubaccountAssetDto> allAssets, long total, int page, int perPage) {
+    private SubaccountAssetsResponse buildResponse(List<SubaccountAssetDto> allAssets,
+                                                    long total,
+                                                    int page,
+                                                    int perPage) {
         int totalPages = (int) Math.ceil((double) total / perPage);
         if (totalPages == 0) totalPages = 1;
         if (page < 1) page = 1;
@@ -60,7 +75,9 @@ public class SubaccountAssetsServiceImpl implements SubaccountAssetService {
         }
 
         int balance = pagedAssets.stream().mapToInt(SubaccountAssetDto::getBalanceValue).sum();
-        int invested = pagedAssets.stream().mapToInt(dto -> dto.getInvestedValue().intValue()).sum();
+        int invested = pagedAssets.stream()
+                .mapToInt(dto -> dto.getInvestedValue().intValue())
+                .sum();
         int totalDiff = balance - invested;
 
         SubaccountAssetsResponse response = new SubaccountAssetsResponse();

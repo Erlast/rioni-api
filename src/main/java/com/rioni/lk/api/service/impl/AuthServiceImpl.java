@@ -3,6 +3,9 @@ package com.rioni.lk.api.service.impl;
 import com.rioni.lk.api.dto.AuthRequest;
 import com.rioni.lk.api.dto.AuthResponse;
 import com.rioni.lk.api.dto.SmsCodeResponse;
+import com.rioni.lk.api.exception.AuthException;
+import com.rioni.lk.api.exception.SmsCodeInvalidException;
+import com.rioni.lk.api.exception.SmsCodeNotFoundException;
 import com.rioni.lk.api.model.ProfileContact;
 import com.rioni.lk.api.model.ProfilePassword;
 import com.rioni.lk.api.model.SmsCode;
@@ -61,13 +64,13 @@ public class AuthServiceImpl implements AuthService {
         Optional<ProfilePassword> profilePasswordOpt = profilePasswordRepository.findByProfileLogin(request.getLogin());
         
         if (profilePasswordOpt.isEmpty()) {
-            throw new RuntimeException("Invalid credentials");
+            throw new AuthException("Wrong login or password");
         }
         
         ProfilePassword profilePassword = profilePasswordOpt.get();
         
         if (!passwordEncoder.matches(request.getPassword(), profilePassword.getPasswordHash())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new AuthException("Wrong login or password");
         }
         
         int profileId = profilePassword.getProfile().getId();
@@ -119,13 +122,13 @@ public class AuthServiceImpl implements AuthService {
         Optional<SmsCode> smsCodeOpt = smsCodeRepository.findById(smsCodeId);
         
         if (smsCodeOpt.isEmpty()) {
-            throw new RuntimeException("SMS code not found");
+            throw new SmsCodeNotFoundException("Sms code none exist");
         }
         
         SmsCode smsCode = smsCodeOpt.get();
         
         if (smsCode.isUsed()) {
-            throw new RuntimeException("SMS code already used");
+            throw new SmsCodeInvalidException("Wrong code");
         }
         
         LocalDateTime now = LocalDateTime.now();
@@ -133,11 +136,11 @@ public class AuthServiceImpl implements AuthService {
         LocalDateTime expiresAt = createdAt.plusMinutes(SMS_CODE_VALIDITY_MINUTES);
         
         if (now.isAfter(expiresAt)) {
-            throw new RuntimeException("SMS code expired");
+            throw new SmsCodeInvalidException("Wrong code");
         }
         
         if (!smsCode.getCode().equals(code)) {
-            throw new RuntimeException("Invalid SMS code");
+            throw new SmsCodeInvalidException("Wrong code");
         }
         
         String phone = smsCode.getPhone();
