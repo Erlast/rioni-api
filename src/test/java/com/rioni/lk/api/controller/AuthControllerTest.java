@@ -78,6 +78,7 @@ class AuthControllerTest extends AbstractIntegrationTest {
         assertThat(response.getBody().getAccessToken()).isNull();
         assertThat(response.getBody().getRefreshToken()).isNull();
         assertThat(response.getBody().getSmsCodeId()).isPositive();
+        assertThat(response.getBody().getPhoneMasked()).isEqualTo("+37********67");
     }
 
     @Test

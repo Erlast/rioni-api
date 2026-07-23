@@ -3,7 +3,6 @@ package com.rioni.lk.api.controller;
 import com.rioni.lk.api.dto.AuthRequest;
 import com.rioni.lk.api.dto.AuthResponse;
 import com.rioni.lk.api.dto.SmsCodeRequest;
-import com.rioni.lk.api.dto.SmsCodeResponse;
 import com.rioni.lk.api.service.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;

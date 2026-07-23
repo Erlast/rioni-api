@@ -83,11 +83,12 @@ public class AuthServiceImpl implements AuthService {
         }
         
         String phone = phoneContact.get().getValue();
-        String code = DEV_SMS_CODE;
-        
+        String normalizedPhone = PhoneUtils.normalize(phone);
+        String maskedPhone = PhoneUtils.mask(normalizedPhone);
+
         SmsCode smsCode = new SmsCode();
-        smsCode.setPhone(PhoneUtils.normalize(phone));
-        smsCode.setCode(code);
+        smsCode.setPhone(normalizedPhone);
+        smsCode.setCode(DEV_SMS_CODE);
         smsCode.setCreatedAt(LocalDateTime.now());
         
         SmsCode savedSmsCode = smsCodeRepository.save(smsCode);
@@ -98,22 +99,9 @@ public class AuthServiceImpl implements AuthService {
                 null,
                 0,
                 0,
-                savedSmsCode.getId()
+                savedSmsCode.getId(),
+                maskedPhone
         );
-    }
-
-    @Override
-    public SmsCodeResponse sendSmsCode(String phone) {
-        String code = DEV_SMS_CODE;
-        
-        SmsCode smsCode = new SmsCode();
-        smsCode.setPhone(PhoneUtils.normalize(phone));
-        smsCode.setCode(code);
-        smsCode.setCreatedAt(LocalDateTime.now());
-        
-        SmsCode savedSmsCode = smsCodeRepository.save(smsCode);
-        
-        return new SmsCodeResponse(savedSmsCode.getId());
     }
 
     @Override
@@ -166,6 +154,7 @@ public class AuthServiceImpl implements AuthService {
                 refreshToken,
                 accessTokenExpiration,
                 refreshTokenExpiration,
+                null,
                 null
         );
     }
@@ -181,6 +170,7 @@ public class AuthServiceImpl implements AuthService {
                 newRefreshToken,
                 accessTokenExpiration,
                 refreshTokenExpiration,
+                null,
                 null
         );
     }

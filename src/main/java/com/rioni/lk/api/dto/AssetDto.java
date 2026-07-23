@@ -1,6 +1,5 @@
 package com.rioni.lk.api.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.rioni.lk.api.model.Asset;
 import lombok.AllArgsConstructor;
 import lombok.Data;

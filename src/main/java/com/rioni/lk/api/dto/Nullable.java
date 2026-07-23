@@ -4,19 +4,14 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import lombok.Getter;
+
 import java.io.IOException;
 
 public class Nullable<T> {
-    private T value;
-    private boolean sent;
-
-    public Nullable() {
-    }
-
-    public Nullable(T value) {
-        this.value = value;
-        this.sent = true;
-    }
+    @Getter
+    private final T value;
+    private final boolean sent;
 
     public Nullable(T value, boolean sent) {
         this.value = value;
@@ -25,10 +20,6 @@ public class Nullable<T> {
 
     public static <T> Nullable<T> of(T value) {
         return new Nullable<>(value, true);
-    }
-
-    public T getValue() {
-        return value;
     }
 
     public boolean wasSent() {

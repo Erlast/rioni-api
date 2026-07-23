@@ -1,6 +1,5 @@
 package com.rioni.lk.api.dto;
 
-import com.rioni.lk.api.dto.CurrencyDto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

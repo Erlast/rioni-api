@@ -26,4 +26,7 @@ public class AuthResponse {
     
     @JsonProperty("sms_code_id")
     private Long smsCodeId;
+
+    @JsonProperty("phone_masked")
+    private String phoneMasked;
 }

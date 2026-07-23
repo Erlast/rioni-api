@@ -143,7 +143,7 @@ public class ProfileController {
             if (!result) {
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
             }
-            // Return the updated profile to get the full avatar URL
+
             ProfileResponseDto profile = profileService.getProfileById(profileId);
             return new ResponseEntity<>(Map.of("url", profile.getPhotoUrl()), HttpStatus.OK);
         } catch (IllegalArgumentException e) {

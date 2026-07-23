@@ -43,4 +43,26 @@ public final class PhoneUtils {
         }
         return digitsOnly;
     }
+
+    /**
+     * Masks a phone number for display, showing only the first 3 characters
+     * (including the leading '+') and the last 2 digits, replacing the middle
+     * portion with asterisks.
+     * <p>
+     * Examples:
+     * <ul>
+     *   <li>{@code +79123456734} → {@code +79*******34}</li>
+     *   <li>{@code +375291234567} → {@code +37*******67}</li>
+     * </ul>
+     *
+     * @param phone the normalized phone number, may be {@code null}
+     * @return the masked phone number, or {@code null} if input was {@code null}
+     */
+    public static String mask(String phone) {
+        if (phone == null || phone.length() < 6) {
+            return phone;
+        }
+
+        return phone.substring(0, 3) + "*".repeat(phone.length() - 5) + phone.substring(phone.length() - 2);
+    }
 }
