@@ -1,0 +1,1 @@
+ALTER TABLE sms_codes ADD COLUMN purpose VARCHAR(50);

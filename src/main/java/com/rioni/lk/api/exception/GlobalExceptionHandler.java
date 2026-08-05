@@ -30,4 +30,18 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST)
                 .body(Map.of("message", ex.getMessage()));
     }
+
+    @ExceptionHandler(SmsCodeAttemptsExceededException.class)
+    public ResponseEntity<Map<String, Object>> handleSmsCodeAttemptsExceededException(SmsCodeAttemptsExceededException ex) {
+        return ResponseEntity
+                .status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(Map.of("message", ex.getMessage(), "timeLeft", ex.getTimeLeft()));
+    }
+
+    @ExceptionHandler(DataNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleDataNotFoundException(DataNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(Map.of("message", ex.getMessage()));
+    }
 }

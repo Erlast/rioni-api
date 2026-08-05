@@ -3,7 +3,12 @@ package com.rioni.lk.api.controller;
 import com.rioni.lk.api.AbstractIntegrationTest;
 import com.rioni.lk.api.dto.AuthRequest;
 import com.rioni.lk.api.dto.AuthResponse;
+import com.rioni.lk.api.dto.ChangePasswordRequest;
+import com.rioni.lk.api.dto.CheckContactRequest;
+import com.rioni.lk.api.dto.CheckContactResponse;
+import com.rioni.lk.api.dto.RecoverSmsRequest;
 import com.rioni.lk.api.dto.SmsCodeRequest;
+import com.rioni.lk.api.dto.SmsCodeResponse;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,6 +30,7 @@ class AuthControllerTest extends AbstractIntegrationTest {
     private static final String TEST_LOGIN = "testuser";
     private static final String TEST_PASSWORD = "password123";
     private static final String TEST_PHONE = "+375291234567";
+    private static final String TEST_EMAIL = "testuser@example.com";
 
     @Autowired
     private TestRestTemplate restTemplate;
@@ -52,6 +58,9 @@ class AuthControllerTest extends AbstractIntegrationTest {
         jdbcTemplate.update(
                 "INSERT INTO profile_contacts (profile_id, contact_type, value, is_main, is_confirmed) VALUES (?, ?, ?, ?, ?)",
                 TEST_PROFILE_ID, "phone", TEST_PHONE, true, true);
+        jdbcTemplate.update(
+                "INSERT INTO profile_contacts (profile_id, contact_type, value, is_main, is_confirmed) VALUES (?, ?, ?, ?, ?)",
+                TEST_PROFILE_ID, "email", TEST_EMAIL, true, true);
     }
 
     @Test
@@ -79,6 +88,7 @@ class AuthControllerTest extends AbstractIntegrationTest {
         assertThat(response.getBody().getRefreshToken()).isNull();
         assertThat(response.getBody().getSmsCodeId()).isPositive();
         assertThat(response.getBody().getPhoneMasked()).isEqualTo("+37********67");
+        assertThat(response.getBody().getPurpose()).isEqualTo("authorization");
     }
 
     @Test
@@ -143,8 +153,51 @@ class AuthControllerTest extends AbstractIntegrationTest {
         assertThat(response.getBody()).contains("Wrong login or password");
     }
 
+    @Test
+    void login_whenSmsAttemptsExceeded_shouldReturn422() {
+        // Arrange — create an SMS code via login
+        AuthRequest loginRequest = new AuthRequest(TEST_LOGIN, TEST_PASSWORD);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<AuthRequest> loginHttpEntity = new HttpEntity<>(loginRequest, headers);
+
+        ResponseEntity<AuthResponse> loginResponse = restTemplate.exchange(
+                baseUrl() + "/api/auth/login",
+                HttpMethod.POST,
+                loginHttpEntity,
+                AuthResponse.class
+        );
+        assertThat(loginResponse.getBody()).isNotNull();
+        long smsCodeId = loginResponse.getBody().getSmsCodeId();
+
+        // Exceed the attempt limit by sending wrong code 4 times
+        SmsCodeRequest smsRequest = new SmsCodeRequest(smsCodeId, "000000");
+        HttpEntity<SmsCodeRequest> httpEntity = new HttpEntity<>(smsRequest, headers);
+        for (int i = 0; i < 4; i++) {
+            restTemplate.exchange(
+                    baseUrl() + "/api/auth/check-sms",
+                    HttpMethod.POST,
+                    httpEntity,
+                    String.class
+            );
+        }
+
+        // Act — try to login again
+        ResponseEntity<String> response = restTemplate.exchange(
+                baseUrl() + "/api/auth/login",
+                HttpMethod.POST,
+                loginHttpEntity,
+                String.class
+        );
+
+        // Assert — SmsCodeAttemptsExceededException → 422
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+        assertThat(response.getBody()).contains("Attempts limit exceeded");
+        assertThat(response.getBody()).contains("timeLeft");
+    }
+
     // ─────────────────────────────────────────────────────────────────────────────
-    //  /auth/check_sms
+    //  /auth/check-sms
     // ─────────────────────────────────────────────────────────────────────────────
     private static final String TEST_SMS_CODE = "111111";
 
@@ -172,7 +225,7 @@ class AuthControllerTest extends AbstractIntegrationTest {
         HttpEntity<SmsCodeRequest> smsHttpEntity = new HttpEntity<>(smsRequest, headers);
 
         ResponseEntity<AuthResponse> response = restTemplate.exchange(
-                baseUrl() + "/api/auth/check_sms",
+                baseUrl() + "/api/auth/check-sms",
                 HttpMethod.POST,
                 smsHttpEntity,
                 AuthResponse.class
@@ -188,6 +241,14 @@ class AuthControllerTest extends AbstractIntegrationTest {
         assertThat(response.getBody().getRefreshTokenExpiresIn()).isPositive();
         // sms_code_id should be null because the SMS was used and tokens are returned
         assertThat(response.getBody().getSmsCodeId()).isNull();
+        // purpose should echo the value from the request
+        assertThat(response.getBody().getPurpose()).isEqualTo("authorization");
+
+        // Verify that the SMS code in the database has purpose = 'authorization'
+        String purpose = jdbcTemplate.queryForObject(
+                "SELECT purpose FROM sms_codes WHERE id = ?",
+                String.class, smsCodeId);
+        assertThat(purpose).isEqualTo("authorization");
     }
 
     @Test
@@ -200,7 +261,7 @@ class AuthControllerTest extends AbstractIntegrationTest {
 
         // Act
         ResponseEntity<String> response = restTemplate.exchange(
-                baseUrl() + "/api/auth/check_sms",
+                baseUrl() + "/api/auth/check-sms",
                 HttpMethod.POST,
                 httpRequest,
                 String.class
@@ -224,7 +285,7 @@ class AuthControllerTest extends AbstractIntegrationTest {
 
         // Act
         ResponseEntity<String> response = restTemplate.exchange(
-                baseUrl() + "/api/auth/check_sms",
+                baseUrl() + "/api/auth/check-sms",
                 HttpMethod.POST,
                 httpRequest,
                 String.class
@@ -239,8 +300,8 @@ class AuthControllerTest extends AbstractIntegrationTest {
     void checkSms_withExpiredCode_shouldReturn400() {
         // Arrange — insert an SMS code with a very old creation timestamp (expired)
         jdbcTemplate.update(
-                "INSERT INTO sms_codes (phone, code, created_at, is_used) VALUES (?, ?, NOW() - INTERVAL '1 hour', ?)",
-                TEST_PHONE, TEST_SMS_CODE, false
+                "INSERT INTO sms_codes (phone, code, created_at, is_used, attempted_count, purpose) VALUES (?, ?, NOW() - INTERVAL '1 hour', ?, 0, ?)",
+                TEST_PHONE, TEST_SMS_CODE, false, "authorization"
         );
         Long smsCodeId = jdbcTemplate.queryForObject(
                 "SELECT id FROM sms_codes WHERE phone = ? AND code = ? AND is_used = false ORDER BY created_at DESC LIMIT 1",
@@ -254,7 +315,7 @@ class AuthControllerTest extends AbstractIntegrationTest {
 
         // Act
         ResponseEntity<String> response = restTemplate.exchange(
-                baseUrl() + "/api/auth/check_sms",
+                baseUrl() + "/api/auth/check-sms",
                 HttpMethod.POST,
                 httpRequest,
                 String.class
@@ -287,7 +348,7 @@ class AuthControllerTest extends AbstractIntegrationTest {
         HttpEntity<SmsCodeRequest> httpRequest = new HttpEntity<>(request, headers);
 
         ResponseEntity<String> response = restTemplate.exchange(
-                baseUrl() + "/api/auth/check_sms",
+                baseUrl() + "/api/auth/check-sms",
                 HttpMethod.POST,
                 httpRequest,
                 String.class
@@ -296,6 +357,92 @@ class AuthControllerTest extends AbstractIntegrationTest {
         // Assert — SmsCodeInvalidException → 400 with "Wrong code"
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).contains("Wrong code");
+    }
+
+    @Test
+    void checkSms_withExceededAttempts_shouldReturn422() {
+        // Arrange — create an SMS code via login
+        AuthRequest loginRequest = new AuthRequest(TEST_LOGIN, TEST_PASSWORD);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<AuthRequest> loginHttpEntity = new HttpEntity<>(loginRequest, headers);
+
+        ResponseEntity<AuthResponse> loginResponse = restTemplate.exchange(
+                baseUrl() + "/api/auth/login",
+                HttpMethod.POST,
+                loginHttpEntity,
+                AuthResponse.class
+        );
+        assertThat(loginResponse.getBody()).isNotNull();
+        long smsCodeId = loginResponse.getBody().getSmsCodeId();
+        SmsCodeRequest smsRequest = new SmsCodeRequest(smsCodeId, "000000");
+        HttpEntity<SmsCodeRequest> httpEntity = new HttpEntity<>(smsRequest, headers);
+
+        // Act — send wrong code 4 times; first 3 → 400, 4th → 422
+        for (int i = 0; i < 3; i++) {
+            ResponseEntity<String> response = restTemplate.exchange(
+                    baseUrl() + "/api/auth/check-sms",
+                    HttpMethod.POST,
+                    httpEntity,
+                    String.class
+            );
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(response.getBody()).contains("Wrong code");
+        }
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                baseUrl() + "/api/auth/check-sms",
+                HttpMethod.POST,
+                httpEntity,
+                String.class
+        );
+
+        // Assert — SmsCodeAttemptsExceededException → 422
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+        assertThat(response.getBody()).contains("Attempts limit exceeded");
+        assertThat(response.getBody()).contains("timeLeft");
+    }
+
+    @Test
+    void checkSms_withRecoveryPurpose_shouldReturn200AndOnlyPurpose() {
+        // Arrange — create a recovery SMS code
+        RecoverSmsRequest recoverRequest = new RecoverSmsRequest(TEST_EMAIL, "email");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<RecoverSmsRequest> recoverHttpEntity = new HttpEntity<>(recoverRequest, headers);
+
+        ResponseEntity<SmsCodeResponse> recoverResponse = restTemplate.exchange(
+                baseUrl() + "/api/auth/recover-sms",
+                HttpMethod.POST,
+                recoverHttpEntity,
+                SmsCodeResponse.class
+        );
+        assertThat(recoverResponse.getBody()).isNotNull();
+        long smsCodeId = recoverResponse.getBody().getSmsCodeId();
+
+        // Act — check the recovery SMS code
+        SmsCodeRequest smsRequest = new SmsCodeRequest(smsCodeId, RECOVERY_SMS_CODE);
+        HttpEntity<SmsCodeRequest> smsHttpEntity = new HttpEntity<>(smsRequest, headers);
+
+        ResponseEntity<AuthResponse> response = restTemplate.exchange(
+                baseUrl() + "/api/auth/check-sms",
+                HttpMethod.POST,
+                smsHttpEntity,
+                AuthResponse.class
+        );
+
+        // Assert — 200, all fields empty except purpose and sms_code_id,
+        // which uniquely identifies the profile for the change password API
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getPurpose()).isEqualTo("recovery");
+        assertThat(response.getBody().getAccessToken()).isNull();
+        assertThat(response.getBody().getTokenType()).isNull();
+        assertThat(response.getBody().getRefreshToken()).isNull();
+        assertThat(response.getBody().getExpiresIn()).isZero();
+        assertThat(response.getBody().getRefreshTokenExpiresIn()).isZero();
+        assertThat(response.getBody().getSmsCodeId()).isEqualTo(smsCodeId);
+        assertThat(response.getBody().getPhoneMasked()).isNull();
     }
 
     // ─────────────────────────────────────────────────────────────────────────────
@@ -427,6 +574,370 @@ class AuthControllerTest extends AbstractIntegrationTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────────────
+    //  /auth/check-contact
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    @Test
+    void checkContact_withExistingPhone_shouldReturnExistsTrue() {
+        // Arrange
+        CheckContactRequest request = new CheckContactRequest(TEST_PHONE, "phone");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<CheckContactRequest> httpRequest = new HttpEntity<>(request, headers);
+
+        // Act
+        ResponseEntity<CheckContactResponse> response = restTemplate.exchange(
+                baseUrl() + "/api/auth/check-contact",
+                HttpMethod.POST,
+                httpRequest,
+                CheckContactResponse.class
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().isExists()).isTrue();
+    }
+
+    @Test
+    void checkContact_withNonExistingPhone_shouldReturnExistsFalse() {
+        // Arrange
+        CheckContactRequest request = new CheckContactRequest("+375291111111", "phone");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<CheckContactRequest> httpRequest = new HttpEntity<>(request, headers);
+
+        // Act
+        ResponseEntity<CheckContactResponse> response = restTemplate.exchange(
+                baseUrl() + "/api/auth/check-contact",
+                HttpMethod.POST,
+                httpRequest,
+                CheckContactResponse.class
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().isExists()).isFalse();
+    }
+
+    @Test
+    void checkContact_withExistingEmail_shouldReturnExistsTrue() {
+        // Arrange
+        CheckContactRequest request = new CheckContactRequest(TEST_EMAIL, "email");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<CheckContactRequest> httpRequest = new HttpEntity<>(request, headers);
+
+        // Act
+        ResponseEntity<CheckContactResponse> response = restTemplate.exchange(
+                baseUrl() + "/api/auth/check-contact",
+                HttpMethod.POST,
+                httpRequest,
+                CheckContactResponse.class
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().isExists()).isTrue();
+    }
+
+    @Test
+    void checkContact_withNonExistingEmail_shouldReturnExistsFalse() {
+        // Arrange
+        CheckContactRequest request = new CheckContactRequest("nonexistent@example.com", "email");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<CheckContactRequest> httpRequest = new HttpEntity<>(request, headers);
+
+        // Act
+        ResponseEntity<CheckContactResponse> response = restTemplate.exchange(
+                baseUrl() + "/api/auth/check-contact",
+                HttpMethod.POST,
+                httpRequest,
+                CheckContactResponse.class
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().isExists()).isFalse();
+    }
+
+    @Test
+    void checkContact_withInvalidType_shouldReturnExistsFalse() {
+        // Arrange
+        CheckContactRequest request = new CheckContactRequest("somevalue", "invalid_type");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<CheckContactRequest> httpRequest = new HttpEntity<>(request, headers);
+
+        // Act
+        ResponseEntity<CheckContactResponse> response = restTemplate.exchange(
+                baseUrl() + "/api/auth/check-contact",
+                HttpMethod.POST,
+                httpRequest,
+                CheckContactResponse.class
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().isExists()).isFalse();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    //  /auth/recover-sms
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    private static final String RECOVERY_SMS_CODE = "222222";
+
+    @Test
+    void recoverSms_withValidEmail_shouldReturn200AndSmsCodeId() {
+        // Arrange
+        RecoverSmsRequest request = new RecoverSmsRequest(TEST_EMAIL, "email");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<RecoverSmsRequest> httpRequest = new HttpEntity<>(request, headers);
+
+        // Act
+        ResponseEntity<SmsCodeResponse> response = restTemplate.exchange(
+                baseUrl() + "/api/auth/recover-sms",
+                HttpMethod.POST,
+                httpRequest,
+                SmsCodeResponse.class
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getSmsCodeId()).isPositive();
+
+        // Verify the SMS code record in the database
+        String purpose = jdbcTemplate.queryForObject(
+                "SELECT purpose FROM sms_codes WHERE id = ?",
+                String.class, response.getBody().getSmsCodeId());
+        assertThat(purpose).isEqualTo("recovery");
+
+        String code = jdbcTemplate.queryForObject(
+                "SELECT code FROM sms_codes WHERE id = ?",
+                String.class, response.getBody().getSmsCodeId());
+        assertThat(code).isEqualTo(RECOVERY_SMS_CODE);
+
+        Boolean isUsed = jdbcTemplate.queryForObject(
+                "SELECT is_used FROM sms_codes WHERE id = ?",
+                Boolean.class, response.getBody().getSmsCodeId());
+        assertThat(isUsed).isFalse();
+    }
+
+    @Test
+    void recoverSms_withValidPhone_shouldReturn200AndSmsCodeId() {
+        // Arrange
+        RecoverSmsRequest request = new RecoverSmsRequest(TEST_PHONE, "phone");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<RecoverSmsRequest> httpRequest = new HttpEntity<>(request, headers);
+
+        // Act
+        ResponseEntity<SmsCodeResponse> response = restTemplate.exchange(
+                baseUrl() + "/api/auth/recover-sms",
+                HttpMethod.POST,
+                httpRequest,
+                SmsCodeResponse.class
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getSmsCodeId()).isPositive();
+    }
+
+    @Test
+    void recoverSms_withNonExistentEmail_shouldReturn422() {
+        // Arrange
+        RecoverSmsRequest request = new RecoverSmsRequest("nonexistent@example.com", "email");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<RecoverSmsRequest> httpRequest = new HttpEntity<>(request, headers);
+
+        // Act
+        ResponseEntity<String> response = restTemplate.exchange(
+                baseUrl() + "/api/auth/recover-sms",
+                HttpMethod.POST,
+                httpRequest,
+                String.class
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+        assertThat(response.getBody()).contains("Data not found");
+    }
+
+    @Test
+    void recoverSms_withNonExistentPhone_shouldReturn422() {
+        // Arrange
+        RecoverSmsRequest request = new RecoverSmsRequest("+375291111111", "phone");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<RecoverSmsRequest> httpRequest = new HttpEntity<>(request, headers);
+
+        // Act
+        ResponseEntity<String> response = restTemplate.exchange(
+                baseUrl() + "/api/auth/recover-sms",
+                HttpMethod.POST,
+                httpRequest,
+                String.class
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+        assertThat(response.getBody()).contains("Data not found");
+    }
+
+    @Test
+    void recoverSms_withInvalidType_shouldReturn422() {
+        // Arrange
+        RecoverSmsRequest request = new RecoverSmsRequest("somevalue", "invalid_type");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<RecoverSmsRequest> httpRequest = new HttpEntity<>(request, headers);
+
+        // Act
+        ResponseEntity<String> response = restTemplate.exchange(
+                baseUrl() + "/api/auth/recover-sms",
+                HttpMethod.POST,
+                httpRequest,
+                String.class
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+        assertThat(response.getBody()).contains("Data not found");
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    //  /auth/change_password
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    private static final String NEW_PASSWORD = "newpassword456";
+
+    @Test
+    void changePassword_withConfirmedRecoveryCode_shouldReturn200AndUpdatePassword() {
+        // Arrange — create and confirm a recovery SMS code
+        long smsCodeId = createAndConsumeRecoverySmsCode();
+
+        ChangePasswordRequest request = new ChangePasswordRequest(null, NEW_PASSWORD, smsCodeId);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<ChangePasswordRequest> httpRequest = new HttpEntity<>(request, headers);
+
+        // Act
+        ResponseEntity<Void> response = restTemplate.exchange(
+                baseUrl() + "/api/auth/change_password",
+                HttpMethod.POST,
+                httpRequest,
+                Void.class
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        // The new password should work for login
+        AuthRequest loginRequest = new AuthRequest(TEST_LOGIN, NEW_PASSWORD);
+        HttpHeaders loginHeaders = new HttpHeaders();
+        loginHeaders.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<AuthRequest> loginHttpRequest = new HttpEntity<>(loginRequest, loginHeaders);
+
+        ResponseEntity<AuthResponse> loginResponse = restTemplate.exchange(
+                baseUrl() + "/api/auth/login",
+                HttpMethod.POST,
+                loginHttpRequest,
+                AuthResponse.class
+        );
+        assertThat(loginResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        // The old password should no longer work
+        AuthRequest oldLoginRequest = new AuthRequest(TEST_LOGIN, TEST_PASSWORD);
+        HttpEntity<AuthRequest> oldLoginHttpRequest = new HttpEntity<>(oldLoginRequest, loginHeaders);
+
+        ResponseEntity<String> oldLoginResponse = restTemplate.exchange(
+                baseUrl() + "/api/auth/login",
+                HttpMethod.POST,
+                oldLoginHttpRequest,
+                String.class
+        );
+        assertThat(oldLoginResponse.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    void changePassword_withWrongOldPassword_shouldReturn401() {
+        // Arrange — create and confirm a recovery SMS code
+        long smsCodeId = createAndConsumeRecoverySmsCode();
+
+        ChangePasswordRequest request = new ChangePasswordRequest("wrong-old-password", NEW_PASSWORD, smsCodeId);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<ChangePasswordRequest> httpRequest = new HttpEntity<>(request, headers);
+
+        // Act
+        ResponseEntity<String> response = restTemplate.exchange(
+                baseUrl() + "/api/auth/change_password",
+                HttpMethod.POST,
+                httpRequest,
+                String.class
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(response.getBody()).contains("Wrong old password");
+    }
+
+    @Test
+    void changePassword_withNonRecoveryCode_shouldReturn400() {
+        // Arrange — create an authorization SMS code (not recovery)
+        long smsCodeId = createAndConsumeSmsCode();
+
+        ChangePasswordRequest request = new ChangePasswordRequest(null, NEW_PASSWORD, smsCodeId);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<ChangePasswordRequest> httpRequest = new HttpEntity<>(request, headers);
+
+        // Act
+        ResponseEntity<String> response = restTemplate.exchange(
+                baseUrl() + "/api/auth/change_password",
+                HttpMethod.POST,
+                httpRequest,
+                String.class
+        );
+
+        // Assert — SmsCodeInvalidException → 400
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).contains("Wrong code");
+    }
+
+    @Test
+    void changePassword_withNonExistentCode_shouldReturn404() {
+        // Arrange
+        ChangePasswordRequest request = new ChangePasswordRequest(null, NEW_PASSWORD, 999999L);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<ChangePasswordRequest> httpRequest = new HttpEntity<>(request, headers);
+
+        // Act
+        ResponseEntity<String> response = restTemplate.exchange(
+                baseUrl() + "/api/auth/change_password",
+                HttpMethod.POST,
+                httpRequest,
+                String.class
+        );
+
+        // Assert — SmsCodeNotFoundException → 404
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody()).contains("Sms code none exist");
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────
     //  Helpers
     // ─────────────────────────────────────────────────────────────────────────────
 
@@ -454,7 +965,40 @@ class AuthControllerTest extends AbstractIntegrationTest {
         SmsCodeRequest smsRequest = new SmsCodeRequest(smsCodeId, TEST_SMS_CODE);
         HttpEntity<SmsCodeRequest> smsHttpEntity = new HttpEntity<>(smsRequest, headers);
         restTemplate.exchange(
-                baseUrl() + "/api/auth/check_sms",
+                baseUrl() + "/api/auth/check-sms",
+                HttpMethod.POST,
+                smsHttpEntity,
+                AuthResponse.class
+        );
+
+        return smsCodeId;
+    }
+
+    /**
+     * Creates a recovery SMS code via /auth/recover-sms and confirms it via
+     * /auth/check-sms (marking it {@code is_used = true}). Returns the SMS
+     * code ID for the change password API.
+     */
+    private long createAndConsumeRecoverySmsCode() {
+        // Step 1: recover-sms to create a recovery code
+        RecoverSmsRequest recoverRequest = new RecoverSmsRequest(TEST_EMAIL, "email");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<RecoverSmsRequest> recoverHttpEntity = new HttpEntity<>(recoverRequest, headers);
+
+        ResponseEntity<SmsCodeResponse> recoverResponse = restTemplate.exchange(
+                baseUrl() + "/api/auth/recover-sms",
+                HttpMethod.POST,
+                recoverHttpEntity,
+                SmsCodeResponse.class
+        );
+        long smsCodeId = recoverResponse.getBody().getSmsCodeId();
+
+        // Step 2: confirm the recovery code via check-sms
+        SmsCodeRequest smsRequest = new SmsCodeRequest(smsCodeId, RECOVERY_SMS_CODE);
+        HttpEntity<SmsCodeRequest> smsHttpEntity = new HttpEntity<>(smsRequest, headers);
+        restTemplate.exchange(
+                baseUrl() + "/api/auth/check-sms",
                 HttpMethod.POST,
                 smsHttpEntity,
                 AuthResponse.class

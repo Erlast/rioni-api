@@ -2,11 +2,14 @@ package com.rioni.lk.api.controller;
 
 import com.rioni.lk.api.AbstractIntegrationTest;
 import com.rioni.lk.api.dto.DictionariesResponse;
+import com.rioni.lk.api.dto.GlossaryEntryDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
@@ -89,6 +92,162 @@ class DictionaryControllerTest extends AbstractIntegrationTest {
 
         // Assert
         // Spring Security returns 403 Forbidden when JWT token is malformed/invalid
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    //  /dictionaries/glossary/
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    @Test
+    void getGlossary_withValidTokenAndRussianLanguage_shouldReturn200AndRussianEntries() {
+        // Arrange
+        String token = createAccessToken(1);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        HttpEntity<Void> request = new HttpEntity<>(headers);
+
+        // Act
+        ResponseEntity<GlossaryEntryDto[]> response = restTemplate.exchange(
+                baseUrl() + "/api/dictionaries/glossary/?lang=ru",
+                HttpMethod.GET,
+                request,
+                GlossaryEntryDto[].class
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody()).isNotEmpty();
+
+        for (GlossaryEntryDto entry : response.getBody()) {
+            assertThat(entry.getLanguage()).isEqualTo("ru");
+            assertThat(entry.getTerm()).isNotBlank();
+            assertThat(entry.getDefinition()).isNotBlank();
+        }
+    }
+
+    @Test
+    void getGlossary_withValidTokenAndEnglishLanguage_shouldReturn200AndEnglishEntries() {
+        // Arrange
+        String token = createAccessToken(1);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        HttpEntity<Void> request = new HttpEntity<>(headers);
+
+        // Act
+        ResponseEntity<GlossaryEntryDto[]> response = restTemplate.exchange(
+                baseUrl() + "/api/dictionaries/glossary/?lang=en",
+                HttpMethod.GET,
+                request,
+                GlossaryEntryDto[].class
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody()).isNotEmpty();
+
+        for (GlossaryEntryDto entry : response.getBody()) {
+            assertThat(entry.getLanguage()).isEqualTo("en");
+        }
+    }
+
+    @Test
+    void getGlossary_withLetterFilter_shouldReturnOnlyEntriesForThatLetter() {
+        // Arrange
+        String token = createAccessToken(1);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        HttpEntity<Void> request = new HttpEntity<>(headers);
+
+        // Build the URI with UriComponentsBuilder so the Cyrillic letter
+        // is properly percent-encoded (a pre-encoded string passed to
+        // RestTemplate would be re-encoded and double-encoded).
+        URI uri = UriComponentsBuilder
+                .fromHttpUrl(baseUrl() + "/api/dictionaries/glossary/")
+                .queryParam("lang", "ru")
+                .queryParam("letter", "\u0410") // Cyrillic 'А' (U+0410)
+                .build()
+                .encode()
+                .toUri();
+
+        // Act
+        ResponseEntity<GlossaryEntryDto[]> response = restTemplate.exchange(
+                uri,
+                HttpMethod.GET,
+                request,
+                GlossaryEntryDto[].class
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody()).isNotEmpty();
+
+        for (GlossaryEntryDto entry : response.getBody()) {
+            assertThat(entry.getLanguage()).isEqualTo("ru");
+            assertThat(entry.getLetter()).isEqualTo("\u0410");
+        }
+    }
+
+    @Test
+    void getGlossary_withLanguageHavingNoEntries_shouldReturn200AndEmptyList() {
+        // Arrange
+        String token = createAccessToken(1);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        HttpEntity<Void> request = new HttpEntity<>(headers);
+
+        // Act
+        ResponseEntity<GlossaryEntryDto[]> response = restTemplate.exchange(
+                baseUrl() + "/api/dictionaries/glossary/?lang=fr",
+                HttpMethod.GET,
+                request,
+                GlossaryEntryDto[].class
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody()).isEmpty();
+    }
+
+    @Test
+    void getGlossary_withoutLanguageParam_shouldReturn400() {
+        // Arrange
+        String token = createAccessToken(1);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        HttpEntity<Void> request = new HttpEntity<>(headers);
+
+        // Act
+        ResponseEntity<String> response = restTemplate.exchange(
+                baseUrl() + "/api/dictionaries/glossary/",
+                HttpMethod.GET,
+                request,
+                String.class
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void getGlossary_withoutToken_shouldReturn403() {
+        // Arrange
+        HttpHeaders headers = new HttpHeaders();
+        HttpEntity<Void> request = new HttpEntity<>(headers);
+
+        // Act
+        ResponseEntity<String> response = restTemplate.exchange(
+                baseUrl() + "/api/dictionaries/glossary/?lang=ru",
+                HttpMethod.GET,
+                request,
+                String.class
+        );
+
+        // Assert
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }
 }

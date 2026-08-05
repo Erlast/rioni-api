@@ -29,4 +29,10 @@ public class SmsCode {
 
     @Column(name = "is_used")
     private boolean isUsed;
+
+    @Column(name = "attempted_count")
+    private int attemptedCount;
+
+    @Column(name = "purpose")
+    private String purpose;
 }

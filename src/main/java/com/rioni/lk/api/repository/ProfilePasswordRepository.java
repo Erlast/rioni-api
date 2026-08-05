@@ -13,4 +13,7 @@ public interface ProfilePasswordRepository extends JpaRepository<ProfilePassword
     
     @Query("SELECT pp FROM ProfilePassword pp JOIN FETCH pp.profile p WHERE p.Login = :login")
     Optional<ProfilePassword> findByProfileLogin(@Param("login") String login);
+
+    @Query("SELECT pp FROM ProfilePassword pp JOIN FETCH pp.profile p WHERE p.id = :profileId")
+    Optional<ProfilePassword> findByProfileId(@Param("profileId") int profileId);
 }

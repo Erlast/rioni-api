@@ -36,6 +36,7 @@ dependencies {
 	implementation 'org.flywaydb:flyway-database-postgresql'
 	implementation 'org.springframework.security:spring-security-crypto'
 	implementation 'com.querydsl:querydsl-jpa:5.1.0:jakarta'
+	implementation 'org.jsoup:jsoup:1.18.1'
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'org.postgresql:postgresql'
 	annotationProcessor 'org.projectlombok:lombok'

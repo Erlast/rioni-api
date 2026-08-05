@@ -1,0 +1,1 @@
+ALTER TABLE sms_codes ADD COLUMN attempted_count INT NOT NULL DEFAULT 0;

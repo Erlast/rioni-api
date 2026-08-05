@@ -1,4 +1,6 @@
-FROM openjdk:24-ea-jdk-slim-bullseye
+# The official `openjdk` Docker Hub library is deprecated and no longer
+# publishes images for JDK 17+. Use Eclipse Temurin (Adoptium) instead.
+FROM eclipse-temurin:24-jdk-noble
 
 RUN apt-get update && \
     apt-get install -y wget unzip && \
