@@ -29,7 +29,7 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/check-sms")
+    @PostMapping({"/check-sms", "/check_sms"})
     public ResponseEntity<AuthResponse> checkSms(@RequestBody SmsCodeRequest request) {
         AuthResponse response = authService.checkSmsCode(request);
         return ResponseEntity.ok(response);
@@ -60,7 +60,7 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/recover-sms")
+    @PostMapping({"/recover-sms", "/recover_sms"})
     public ResponseEntity<SmsCodeResponse> recoverSms(@RequestBody RecoverSmsRequest request) {
         SmsCodeResponse response = authService.recoverSms(request);
         return ResponseEntity.ok(response);
