@@ -36,4 +36,6 @@ public interface ProfileService {
 
     boolean deleteAvatar(Long profileId);
 
+    boolean saveTariff(Long profileId, Integer tariffId);
+
 }

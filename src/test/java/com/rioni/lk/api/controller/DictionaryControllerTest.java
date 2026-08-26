@@ -3,6 +3,7 @@ package com.rioni.lk.api.controller;
 import com.rioni.lk.api.AbstractIntegrationTest;
 import com.rioni.lk.api.dto.DictionariesResponse;
 import com.rioni.lk.api.dto.GlossaryEntryDto;
+import com.rioni.lk.api.dto.TariffDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -242,6 +243,56 @@ class DictionaryControllerTest extends AbstractIntegrationTest {
         // Act
         ResponseEntity<String> response = restTemplate.exchange(
                 baseUrl() + "/api/dictionaries/glossary/?lang=ru",
+                HttpMethod.GET,
+                request,
+                String.class
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    //  GET /dictionaries/tariffs
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    @Test
+    void getTariffs_withValidToken_shouldReturn200AndListOfTariffs() {
+        // Arrange
+        String token = createAccessToken(1);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        HttpEntity<Void> request = new HttpEntity<>(headers);
+
+        // Act
+        ResponseEntity<TariffDto[]> response = restTemplate.exchange(
+                baseUrl() + "/api/dictionaries/tariffs",
+                HttpMethod.GET,
+                request,
+                TariffDto[].class
+        );
+
+        // Assert
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody()).isNotEmpty();
+
+        // Verify each tariff has the expected structure (id, name, description)
+        for (TariffDto tariff : response.getBody()) {
+            assertThat(tariff.getId()).isPositive();
+            assertThat(tariff.getName()).isNotBlank();
+            assertThat(tariff.getDescription()).isNotNull();
+        }
+    }
+
+    @Test
+    void getTariffs_withoutToken_shouldReturn403() {
+        // Arrange
+        HttpEntity<Void> request = new HttpEntity<>(new HttpHeaders());
+
+        // Act
+        ResponseEntity<String> response = restTemplate.exchange(
+                baseUrl() + "/api/dictionaries/tariffs",
                 HttpMethod.GET,
                 request,
                 String.class

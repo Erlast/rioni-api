@@ -47,6 +47,7 @@ public class ProfileMapper {
         dto.setHasBeneficiaries(profile.getHasBeneficiaries());
         dto.setIsPep(profile.getIsPep());
         dto.setNoResidencePermit(profile.getNoResidencePermit());
+        dto.setTariffId(profile.getTariffId());
         dto.setContacts(contacts.stream().map(ProfileMapper::mapContactToDto).collect(Collectors.toList()));
         dto.setAddresses(addresses.stream().map(ProfileMapper::mapAddressToDto).collect(Collectors.toList()));
         return dto;

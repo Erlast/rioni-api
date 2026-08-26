@@ -24,6 +24,7 @@ import com.rioni.lk.api.dto.ProfileAddressDto;
 import com.rioni.lk.api.dto.TaxResidenceDto;
 import com.rioni.lk.api.dto.ResidencePermitDto;
 import com.rioni.lk.api.dto.BankAccountDto;
+import com.rioni.lk.api.dto.TariffSelectionRequest;
 import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.Map;
@@ -157,6 +158,16 @@ public class ProfileController {
     public ResponseEntity<Void> deleteAvatar() {
         Long profileId = getCurrentProfileId();
         boolean result = profileService.deleteAvatar(profileId);
+        if (!result) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("/profile/tariff")
+    public ResponseEntity<Void> saveTariff(@RequestBody TariffSelectionRequest request) {
+        Long profileId = getCurrentProfileId();
+        boolean result = profileService.saveTariff(profileId, request.getTariffId());
         if (!result) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }

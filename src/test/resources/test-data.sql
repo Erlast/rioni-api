@@ -14,3 +14,10 @@ INSERT INTO glossary_entries (source_no, language, letter, term, english, defini
     (1002, 'en', 'B', 'Broker', 'Broker', 'Test definition of broker'),
     (1001, 'ge', 'ა', 'აქტივი', 'Asset', 'ტესტური განმარტება')
 ON CONFLICT (source_no, language) DO NOTHING;
+
+-- Test data: tariffs for DictionaryControllerTest
+INSERT INTO tariffs (id, name, description) VALUES
+    (1, 'Standard', 'Standard trading tariff'),
+    (2, 'Premium', 'Premium trading tariff with extra benefits'),
+    (3, 'Pro', 'Pro tariff for active traders')
+ON CONFLICT (id) DO NOTHING;

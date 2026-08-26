@@ -44,4 +44,11 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.UNPROCESSABLE_ENTITY)
                 .body(Map.of("message", ex.getMessage()));
     }
+
+    @ExceptionHandler(TariffNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleTariffNotFoundException(TariffNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("message", ex.getMessage()));
+    }
 }

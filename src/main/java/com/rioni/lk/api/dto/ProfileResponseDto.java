@@ -2,10 +2,12 @@ package com.rioni.lk.api.dto;
 
 import lombok.Data;
 import java.util.List;
+import java.math.BigDecimal;
 
 @Data
 public class ProfileResponseDto {
     private int id;
+    private BigDecimal balance;
     private String nbs;
     private String ndu;
     private String name;
@@ -37,4 +39,5 @@ public class ProfileResponseDto {
     private Boolean hasBeneficiaries;
     private Boolean isPep;
     private Boolean noResidencePermit;
+    private Integer tariffId;
 }

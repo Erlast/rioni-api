@@ -46,5 +46,7 @@ public class Profile {
     private Boolean hasBeneficiaries;
     private Boolean isPep;
     private Boolean noResidencePermit;
+    @Column(name = "tariff_id")
+    private Integer tariffId;
 
 }
