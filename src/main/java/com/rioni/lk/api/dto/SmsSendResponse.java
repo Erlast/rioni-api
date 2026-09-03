@@ -8,7 +8,16 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class SmsCodeResponse {
+public class SmsSendResponse {
+    @JsonProperty("purpose")
+    private String purpose;
+
     @JsonProperty("sms_code_id")
-    private long smsCodeId;
+    private Long smsCodeId;
+
+    @JsonProperty("phone_masked")
+    private String phoneMasked;
+
+    @JsonProperty("profile_id")
+    private Integer profileId;
 }

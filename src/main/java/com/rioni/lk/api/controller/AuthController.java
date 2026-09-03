@@ -6,8 +6,10 @@ import com.rioni.lk.api.dto.ChangePasswordRequest;
 import com.rioni.lk.api.dto.CheckContactRequest;
 import com.rioni.lk.api.dto.CheckContactResponse;
 import com.rioni.lk.api.dto.RecoverSmsRequest;
+import com.rioni.lk.api.dto.RegistrationRequest;
+import com.rioni.lk.api.dto.RegistrationSmsRequest;
 import com.rioni.lk.api.dto.SmsCodeRequest;
-import com.rioni.lk.api.dto.SmsCodeResponse;
+import com.rioni.lk.api.dto.SmsSendResponse;
 import com.rioni.lk.api.service.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -24,14 +26,19 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
-        AuthResponse response = authService.authenticate(request);
+    public ResponseEntity<SmsSendResponse> login(@RequestBody AuthRequest request) {
+        SmsSendResponse response = authService.authenticate(request);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping({"/check-sms", "/check_sms"})
     public ResponseEntity<AuthResponse> checkSms(@RequestBody SmsCodeRequest request) {
         AuthResponse response = authService.checkSmsCode(request);
+        if (response == null) {
+            // Recovery and registration purposes confirm the code but return an
+            // empty body with 200 — no tokens are issued in those flows.
+            return ResponseEntity.ok().build();
+        }
         return ResponseEntity.ok(response);
     }
 
@@ -61,14 +68,26 @@ public class AuthController {
     }
 
     @PostMapping({"/recover-sms", "/recover_sms"})
-    public ResponseEntity<SmsCodeResponse> recoverSms(@RequestBody RecoverSmsRequest request) {
-        SmsCodeResponse response = authService.recoverSms(request);
+    public ResponseEntity<SmsSendResponse> recoverSms(@RequestBody RecoverSmsRequest request) {
+        SmsSendResponse response = authService.recoverSms(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/registration-sms-code")
+    public ResponseEntity<SmsSendResponse> registrationSmsCode(@RequestBody RegistrationSmsRequest request) {
+        SmsSendResponse response = authService.sendRegistrationSms(request);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/change_password")
     public ResponseEntity<Void> changePassword(@RequestBody ChangePasswordRequest request) {
         authService.changePassword(request);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/registration")
+    public ResponseEntity<Void> registration(@RequestBody RegistrationRequest request) {
+        authService.register(request);
         return ResponseEntity.ok().build();
     }
 }

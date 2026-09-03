@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.sql.Timestamp;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -48,5 +50,6 @@ public class Profile {
     private Boolean noResidencePermit;
     @Column(name = "tariff_id")
     private Integer tariffId;
+    private Timestamp tariffStartDate;
 
 }

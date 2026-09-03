@@ -23,16 +23,4 @@ public class AuthResponse {
     
     @JsonProperty("refresh_token_expires_in")
     private long refreshTokenExpiresIn;
-    
-    @JsonProperty("sms_code_id")
-    private Long smsCodeId;
-
-    @JsonProperty("phone_masked")
-    private String phoneMasked;
-
-    @JsonProperty("purpose")
-    private String purpose;
-
-    @JsonProperty("profile_id")
-    private Integer profileId;
 }

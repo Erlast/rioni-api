@@ -1,0 +1,28 @@
+# VCS
+.git
+.gitattributes
+.gitignore
+
+# Gradle — not needed in the runtime image (jar is built on the host)
+.gradle
+gradle
+gradlew
+gradlew.bat
+
+# Build output — keep only the fat jar the Dockerfile copies
+build/*
+!build/libs
+!build/libs/api-1.0.0.jar
+
+# Local/dev artifacts
+.env
+uploads
+node_modules
+
+# Docs and helper scripts
+*.md
+Makefile
+docker-compose.yaml
+scripts
+insert_orders.sql
+check_migration.sql

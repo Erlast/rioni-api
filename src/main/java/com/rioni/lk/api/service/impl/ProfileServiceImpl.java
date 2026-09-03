@@ -32,8 +32,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.time.Instant;
 import java.util.List;
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 
 @Service
 public class ProfileServiceImpl implements ProfileService {
@@ -315,6 +318,7 @@ public class ProfileServiceImpl implements ProfileService {
                         throw new TariffNotFoundException("Tariff not found");
                     }
                     profile.setTariffId(tariffId);
+                    profile.setTariffStartDate(Timestamp.from(Instant.now()));
                     profileRepository.save(profile);
                     return true;
                 })

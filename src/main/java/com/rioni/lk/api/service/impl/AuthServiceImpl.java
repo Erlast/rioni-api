@@ -6,25 +6,37 @@ import com.rioni.lk.api.dto.ChangePasswordRequest;
 import com.rioni.lk.api.dto.CheckContactRequest;
 import com.rioni.lk.api.dto.CheckContactResponse;
 import com.rioni.lk.api.dto.RecoverSmsRequest;
+import com.rioni.lk.api.dto.RegistrationRequest;
+import com.rioni.lk.api.dto.RegistrationSmsRequest;
 import com.rioni.lk.api.dto.SmsCodeRequest;
-import com.rioni.lk.api.dto.SmsCodeResponse;
+import com.rioni.lk.api.dto.SmsSendResponse;
 import com.rioni.lk.api.exception.AuthException;
 import com.rioni.lk.api.exception.DataNotFoundException;
+import com.rioni.lk.api.exception.RegistrationException;
 import com.rioni.lk.api.exception.SmsCodeAttemptsExceededException;
 import com.rioni.lk.api.exception.SmsCodeInvalidException;
 import com.rioni.lk.api.exception.SmsCodeNotFoundException;
+import com.rioni.lk.api.exception.SmsCodeSendException;
+import com.rioni.lk.api.model.Account;
+import com.rioni.lk.api.model.Profile;
+import com.rioni.lk.api.model.ProfileAddress;
 import com.rioni.lk.api.model.ProfileContact;
 import com.rioni.lk.api.model.ProfilePassword;
 import com.rioni.lk.api.model.SmsCode;
+import com.rioni.lk.api.model.Subaccount;
+import com.rioni.lk.api.repository.AccountRepository;
+import com.rioni.lk.api.repository.ProfileAddressRepository;
 import com.rioni.lk.api.repository.ProfileContactRepository;
 import com.rioni.lk.api.repository.ProfilePasswordRepository;
 import com.rioni.lk.api.repository.ProfileRepository;
 import com.rioni.lk.api.repository.SmsCodeRepository;
+import com.rioni.lk.api.repository.SubaccountRepository;
 import com.rioni.lk.api.service.AuthService;
 import com.rioni.lk.api.util.PhoneUtils;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataAccessException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,18 +47,24 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 public class AuthServiceImpl implements AuthService {
 
     private static final String DEV_SMS_CODE = "111111";
+    private static final String REGISTRATION_SMS_CODE = "333333";
     private static final int SMS_CODE_VALIDITY_MINUTES = 5;
     private static final int SMS_CODE_BLOCK_DURATION_MINUTES = 30;
+    private static final int SMS_CODE_MAX_ATTEMPTS = 3;
 
     private final ProfilePasswordRepository profilePasswordRepository;
     private final ProfileContactRepository profileContactRepository;
+    private final ProfileAddressRepository profileAddressRepository;
     private final SmsCodeRepository smsCodeRepository;
     private final ProfileRepository profileRepository;
+    private final AccountRepository accountRepository;
+    private final SubaccountRepository subaccountRepository;
     private final PasswordEncoder passwordEncoder;
     private final SecretKey secretKey;
     private final long accessTokenExpiration;
@@ -55,16 +73,22 @@ public class AuthServiceImpl implements AuthService {
     public AuthServiceImpl(
             ProfilePasswordRepository profilePasswordRepository,
             ProfileContactRepository profileContactRepository,
+            ProfileAddressRepository profileAddressRepository,
             SmsCodeRepository smsCodeRepository,
             ProfileRepository profileRepository,
+            AccountRepository accountRepository,
+            SubaccountRepository subaccountRepository,
             PasswordEncoder passwordEncoder,
             @Value("${jwt.secret}") String secret,
             @Value("${jwt.access-token-expiration}") long accessTokenExpiration,
             @Value("${jwt.refresh-token-expiration}") long refreshTokenExpiration) {
         this.profilePasswordRepository = profilePasswordRepository;
         this.profileContactRepository = profileContactRepository;
+        this.profileAddressRepository = profileAddressRepository;
         this.smsCodeRepository = smsCodeRepository;
         this.profileRepository = profileRepository;
+        this.accountRepository = accountRepository;
+        this.subaccountRepository = subaccountRepository;
         this.passwordEncoder = passwordEncoder;
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.accessTokenExpiration = accessTokenExpiration;
@@ -73,7 +97,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public AuthResponse authenticate(AuthRequest request) {
+    public SmsSendResponse authenticate(AuthRequest request) {
         Optional<ProfilePassword> profilePasswordOpt = profilePasswordRepository.findByProfileLogin(request.getLogin());
         
         if (profilePasswordOpt.isEmpty()) {
@@ -99,9 +123,10 @@ public class AuthServiceImpl implements AuthService {
         String normalizedPhone = PhoneUtils.normalize(phone);
         String maskedPhone = PhoneUtils.mask(normalizedPhone);
 
-        // Check if the latest SMS code for this phone has exceeded the attempt limit
-        // and was created within the last 30 minutes
-        smsCodeRepository.findTopByPhoneOrderByCreatedAtDesc(normalizedPhone)
+        // Check if the latest unused authorization SMS code for this phone
+        // has exceeded the attempt limit and was created within the last 30 minutes
+        smsCodeRepository
+                .findTopByPhoneAndPurposeAndIsUsedOrderByCreatedAtDesc(normalizedPhone, "authorization", false)
                 .ifPresent(lastSmsCode -> {
                     LocalDateTime blockThreshold = LocalDateTime.now().minusMinutes(SMS_CODE_BLOCK_DURATION_MINUTES);
                     if (lastSmsCode.getAttemptedCount() > 3
@@ -122,16 +147,11 @@ public class AuthServiceImpl implements AuthService {
         
         SmsCode savedSmsCode = smsCodeRepository.save(smsCode);
         
-        return new AuthResponse(
-                null,
-                null,
-                null,
-                0,
-                0,
+        return new SmsSendResponse(
+                "authorization",
                 savedSmsCode.getId(),
                 maskedPhone,
-                "authorization",
-                null
+                profileId
         );
     }
 
@@ -179,6 +199,16 @@ public class AuthServiceImpl implements AuthService {
 
         String purpose = smsCode.getPurpose();
 
+        // Recovery and registration purposes: the code is confirmed and marked
+        // as used, but no tokens are issued. The response body is empty (200).
+        // - Recovery: the client already knows the SMS code ID from the
+        //   recover-sms response and passes it to the change password API.
+        // - Registration: no profile exists for the phone yet.
+        if ("recovery".equals(purpose) || "registration".equals(purpose)) {
+            return null;
+        }
+
+        // Authorization purpose: issue access and refresh tokens.
         String phone = smsCode.getPhone();
 
         Optional<ProfileContact> phoneContact = profileContactRepository
@@ -190,23 +220,6 @@ public class AuthServiceImpl implements AuthService {
 
         int profileId = phoneContact.get().getProfileId();
 
-        // Recovery purpose: the code is confirmed and marked as used, but no
-        // tokens are issued. The profile_id is returned so the change password
-        // API knows which profile the password will be reset for.
-        if ("recovery".equals(purpose)) {
-            return new AuthResponse(
-                    null,
-                    null,
-                    null,
-                    0,
-                    0,
-                    smsCode.getId(),
-                    null,
-                    purpose,
-                    profileId
-            );
-        }
-        
         String accessToken = generateAccessToken(profileId);
         String refreshToken = generateRefreshToken(profileId);
         
@@ -215,11 +228,7 @@ public class AuthServiceImpl implements AuthService {
                 "Bearer",
                 refreshToken,
                 accessTokenExpiration,
-                refreshTokenExpiration,
-                null,
-                null,
-                purpose,
-                null
+                refreshTokenExpiration
         );
     }
 
@@ -233,11 +242,7 @@ public class AuthServiceImpl implements AuthService {
                 "Bearer",
                 newRefreshToken,
                 accessTokenExpiration,
-                refreshTokenExpiration,
-                null,
-                null,
-                null,
-                null
+                refreshTokenExpiration
         );
     }
 
@@ -276,6 +281,11 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public CheckContactResponse checkContact(CheckContactRequest request) {
+        if ("login".equals(request.getType())) {
+            Optional<Profile> profile = profileRepository.findByLogin(request.getValue());
+            return new CheckContactResponse(profile.isPresent());
+        }
+
         if (!"phone".equals(request.getType()) && !"email".equals(request.getType())) {
             return new CheckContactResponse(false);
         }
@@ -293,7 +303,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public SmsCodeResponse recoverSms(RecoverSmsRequest request) {
+    public SmsSendResponse recoverSms(RecoverSmsRequest request) {
         if (!"phone".equals(request.getType()) && !"email".equals(request.getType())) {
             throw new DataNotFoundException("Data not found");
         }
@@ -337,7 +347,59 @@ public class AuthServiceImpl implements AuthService {
 
         SmsCode savedSmsCode = smsCodeRepository.save(smsCode);
 
-        return new SmsCodeResponse(savedSmsCode.getId());
+        return new SmsSendResponse(
+                "recovery",
+                savedSmsCode.getId(),
+                PhoneUtils.mask(normalizedPhone),
+                0
+        );
+    }
+
+    @Override
+    @Transactional
+    public SmsSendResponse sendRegistrationSms(RegistrationSmsRequest request) {
+        String normalizedPhone = PhoneUtils.normalize(request.getPhone());
+
+        if (normalizedPhone == null || normalizedPhone.isBlank()) {
+            throw new SmsCodeSendException("Failed to send code");
+        }
+
+        // Check if the latest unused registration SMS code for this phone
+        // has exceeded the attempt limit and was created within the last 30 minutes
+        smsCodeRepository
+                .findTopByPhoneAndPurposeAndIsUsedOrderByCreatedAtDesc(normalizedPhone, "registration", false)
+                .ifPresent(lastSmsCode -> {
+                    LocalDateTime blockThreshold = LocalDateTime.now().minusMinutes(SMS_CODE_BLOCK_DURATION_MINUTES);
+                    if (lastSmsCode.getAttemptedCount() > SMS_CODE_MAX_ATTEMPTS
+                            && lastSmsCode.getCreatedAt().isAfter(blockThreshold)) {
+                        long timeLeft = Duration.between(
+                                LocalDateTime.now(),
+                                lastSmsCode.getCreatedAt().plusMinutes(SMS_CODE_BLOCK_DURATION_MINUTES)
+                        ).getSeconds();
+                        throw new SmsCodeAttemptsExceededException("Attempts limit exceeded", Math.max(timeLeft, 0));
+                    }
+                });
+
+        // "Send" SMS — create a record in the database
+        SmsCode smsCode = new SmsCode();
+        smsCode.setPhone(normalizedPhone);
+        smsCode.setCode(REGISTRATION_SMS_CODE);
+        smsCode.setCreatedAt(LocalDateTime.now());
+        smsCode.setUsed(false);
+        smsCode.setAttemptedCount(0);
+        smsCode.setPurpose("registration");
+
+        try {
+            SmsCode savedSmsCode = smsCodeRepository.save(smsCode);
+            return new SmsSendResponse(
+                    "registration",
+                    savedSmsCode.getId(),
+                    PhoneUtils.mask(normalizedPhone),
+                    0
+            );
+        } catch (DataAccessException ex) {
+            throw new SmsCodeSendException("Failed to send code");
+        }
     }
 
     @Override
@@ -385,5 +447,126 @@ public class AuthServiceImpl implements AuthService {
 
         profilePassword.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         profilePasswordRepository.save(profilePassword);
+    }
+
+    @Override
+    @Transactional
+    public void register(RegistrationRequest request) {
+        String login = resolveLogin(request);
+
+        if (profileRepository.findByLogin(login).isPresent()) {
+            throw new RegistrationException("Login already exists");
+        }
+
+        if (request.getPassword() == null || request.getPassword().isBlank()) {
+            throw new RegistrationException("Password is required");
+        }
+        if (!request.getPassword().equals(request.getConfirmPassword())) {
+            throw new RegistrationException("Passwords do not match");
+        }
+
+        Profile profile = new Profile();
+        profile.setLogin(login);
+        profile.setNickname(request.getName());
+        fillGeneratedProfileFields(profile);
+
+        Profile savedProfile = profileRepository.save(profile);
+        int profileId = savedProfile.getId();
+
+        ProfilePassword profilePassword = new ProfilePassword();
+        profilePassword.setProfile(savedProfile);
+        profilePassword.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        profilePasswordRepository.save(profilePassword);
+
+        savePhoneContact(profileId, request.getPhone());
+        saveEmailContact(profileId, request.getEmail());
+        saveRegistrationAddress(profileId);
+
+        String accountNumber = generateAccountNumber();
+        Account account = new Account();
+        account.setProfileId(profileId);
+        account.setAccountNumber(accountNumber);
+        account.setAccountType("BA");
+        account.setAccountCurrencyId(1);
+        Account savedAccount = accountRepository.save(account);
+
+        for (String subaccountType : new String[]{"T", "W", "D"}) {
+            Subaccount subaccount = new Subaccount();
+            subaccount.setAccountId(savedAccount.getId());
+            subaccount.setAccountNumber(accountNumber + "/" + subaccountType);
+            subaccount.setSubaccountTypeCode(subaccountType);
+            subaccountRepository.save(subaccount);
+        }
+    }
+
+    private String resolveLogin(RegistrationRequest request) {
+        if (request.getLogin() != null && !request.getLogin().isBlank()) {
+            return request.getLogin().trim();
+        }
+        return request.getEmail();
+    }
+
+    /**
+     * Generates placeholder values for the mandatory profile fields. The real
+     * values will be provided by an external source in the future and are not
+     * known at registration time yet.
+     */
+    private void fillGeneratedProfileFields(Profile profile) {
+        String pending = "PENDING";
+        profile.setName(pending);
+        profile.setSurname(pending);
+        profile.setPatronymic(pending);
+        profile.setGender(pending);
+        profile.setCitizenship(pending);
+        profile.setDateOfBirth(pending);
+        profile.setPlaceOfBirth(pending);
+        profile.setDocumentType(pending);
+        profile.setPassportNumber(pending);
+        profile.setPassportIssueDate(pending);
+        profile.setPassportExpiryDate(pending);
+        profile.setNbs(generateDigits(9));
+        profile.setNdu(generateDigits(9));
+    }
+
+    private void savePhoneContact(int profileId, String phone) {
+        ProfileContact contact = new ProfileContact();
+        contact.setProfileId(profileId);
+        contact.setContactType("phone");
+        contact.setValue(PhoneUtils.normalize(phone));
+        contact.setIsMain(true);
+        contact.setIsConfirmed(true);
+        profileContactRepository.save(contact);
+    }
+
+    private void saveEmailContact(int profileId, String email) {
+        ProfileContact contact = new ProfileContact();
+        contact.setProfileId(profileId);
+        contact.setContactType("email");
+        contact.setValue(email);
+        contact.setIsMain(true);
+        contact.setIsConfirmed(false);
+        profileContactRepository.save(contact);
+    }
+
+    private void saveRegistrationAddress(int profileId) {
+        ProfileAddress address = new ProfileAddress();
+        address.setProfileId(profileId);
+        address.setCountry("GE");
+        address.setCity("Tbilisi");
+        address.setAddress("PENDING");
+        address.setIsMain(true);
+        address.setIsConfirmed(true);
+        address.setAddressType("registration");
+        profileAddressRepository.save(address);
+    }
+
+    private String generateAccountNumber() {
+        return "RC-BA" + generateDigits(7);
+    }
+
+    private String generateDigits(int length) {
+        long min = (long) Math.pow(10, length - 1);
+        long max = (long) Math.pow(10, length) - 1;
+        return String.valueOf(ThreadLocalRandom.current().nextLong(min, max + 1));
     }
 }

@@ -1,0 +1,1 @@
+ALTER TABLE profile ADD COLUMN IF NOT EXISTS tariff_start_date TIMESTAMP;

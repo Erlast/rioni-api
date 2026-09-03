@@ -12,7 +12,7 @@ import java.util.Optional;
 
 @Repository
 public interface SmsCodeRepository extends JpaRepository<SmsCode, Long> {
-    Optional<SmsCode> findTopByPhoneOrderByCreatedAtDesc(String phone);
+    Optional<SmsCode> findTopByPhoneAndPurposeAndIsUsedOrderByCreatedAtDesc(String phone, String purpose, boolean isUsed);
 
     @Modifying
     @Query("UPDATE SmsCode s SET s.attemptedCount = s.attemptedCount + 1 WHERE s.id = :id")

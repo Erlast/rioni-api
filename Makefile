@@ -1,13 +1,18 @@
 # Build and run (tests run first — build fails if tests don't pass)
 # Prerequisites: a running PostgreSQL instance for tests (or Testcontainers will be used)
+#
+# The jar is always built on the HOST: the Docker image only copies the
+# pre-built jar, so the container never downloads dependencies from Maven
+# Central (avoids flaky "Remote host terminated the handshake" TLS failures
+# over the Docker proxy/VPN tunnel during the image build).
 up-prod:
-	./gradlew test && docker compose -p rioni-api up --build
+	./gradlew test && ./gradlew build -x test && docker compose -p rioni-api up --build
 build-prod:
-	./gradlew test && docker compose -p rioni-api build
+	./gradlew test && ./gradlew build -x test && docker compose -p rioni-api build
 
 # Build without tests (fast, for development)
 build-fast:
-	docker compose -p rioni-api build
+	./gradlew build -x test && docker compose -p rioni-api build
 
 # ============================================================
 # Testing

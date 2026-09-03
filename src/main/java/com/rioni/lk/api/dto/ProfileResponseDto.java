@@ -1,6 +1,8 @@
 package com.rioni.lk.api.dto;
 
 import lombok.Data;
+
+import java.sql.Timestamp;
 import java.util.List;
 import java.math.BigDecimal;
 
@@ -40,4 +42,5 @@ public class ProfileResponseDto {
     private Boolean isPep;
     private Boolean noResidencePermit;
     private Integer tariffId;
+    private Timestamp tariffStartDate;
 }

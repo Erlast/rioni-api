@@ -45,8 +45,22 @@ public class GlobalExceptionHandler {
                 .body(Map.of("message", ex.getMessage()));
     }
 
+    @ExceptionHandler(SmsCodeSendException.class)
+    public ResponseEntity<Map<String, String>> handleSmsCodeSendException(SmsCodeSendException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("message", ex.getMessage()));
+    }
+
     @ExceptionHandler(TariffNotFoundException.class)
     public ResponseEntity<Map<String, String>> handleTariffNotFoundException(TariffNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("message", ex.getMessage()));
+    }
+
+    @ExceptionHandler(RegistrationException.class)
+    public ResponseEntity<Map<String, String>> handleRegistrationException(RegistrationException ex) {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(Map.of("message", ex.getMessage()));

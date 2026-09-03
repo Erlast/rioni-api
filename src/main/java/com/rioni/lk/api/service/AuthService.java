@@ -6,15 +6,19 @@ import com.rioni.lk.api.dto.ChangePasswordRequest;
 import com.rioni.lk.api.dto.CheckContactRequest;
 import com.rioni.lk.api.dto.CheckContactResponse;
 import com.rioni.lk.api.dto.RecoverSmsRequest;
+import com.rioni.lk.api.dto.RegistrationRequest;
+import com.rioni.lk.api.dto.RegistrationSmsRequest;
 import com.rioni.lk.api.dto.SmsCodeRequest;
-import com.rioni.lk.api.dto.SmsCodeResponse;
+import com.rioni.lk.api.dto.SmsSendResponse;
 
 public interface AuthService {
-    AuthResponse authenticate(AuthRequest request);
+    SmsSendResponse authenticate(AuthRequest request);
     AuthResponse checkSmsCode(SmsCodeRequest request);
     AuthResponse refreshToken(int profileId);
     void logout(int profileId);
     CheckContactResponse checkContact(CheckContactRequest request);
-    SmsCodeResponse recoverSms(RecoverSmsRequest request);
+    SmsSendResponse recoverSms(RecoverSmsRequest request);
+    SmsSendResponse sendRegistrationSms(RegistrationSmsRequest request);
     void changePassword(ChangePasswordRequest request);
+    void register(RegistrationRequest request);
 }

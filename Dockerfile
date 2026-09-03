@@ -1,29 +1,23 @@
 # The official `openjdk` Docker Hub library is deprecated and no longer
 # publishes images for JDK 17+. Use Eclipse Temurin (Adoptium) instead.
+#
+# The application jar is built on the HOST (see the Makefile), not inside this
+# image. Building inside the container previously required downloading every
+# Gradle dependency from Maven Central over the Docker proxy/VPN tunnel, which
+# intermittently failed with "Remote host terminated the handshake" (TLS).
+# Building on the host reuses the local Gradle cache and is deterministic.
 FROM eclipse-temurin:24-jdk-noble
-
-RUN apt-get update && \
-    apt-get install -y wget unzip && \
-    rm -rf /var/lib/apt/lists/*
-
-WORKDIR /opt
-RUN wget https://services.gradle.org/distributions/gradle-9.6.1-bin.zip && \
-    unzip gradle-9.6.1-bin.zip && \
-    rm gradle-9.6.1-bin.zip
-
-ENV GRADLE_HOME=/opt/gradle-9.6.1
-ENV PATH=$GRADLE_HOME/bin:$PATH
 
 WORKDIR /app
 
-COPY . .
+# The fat jar produced by `./gradlew build -x test` (or `./gradlew bootJar`).
+COPY build/libs/api-1.0.0.jar /app/api-1.0.0.jar
 
-# Tests are executed on the host before `docker compose build` (see Makefile).
-# Inside the build container there is no PostgreSQL, so skip the test task.
-RUN gradle build -x test
+# Directory mounted as a volume by docker-compose (./uploads:/app/uploads).
+RUN mkdir -p /app/uploads
 
 ENV JAR_NAME=api-1.0.0.jar
 ENV APP_HOME=/app
 EXPOSE 8080 5005
 
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar $APP_HOME/build/libs/$JAR_NAME"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar $APP_HOME/$JAR_NAME"]

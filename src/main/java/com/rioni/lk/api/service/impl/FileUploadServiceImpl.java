@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -115,6 +117,19 @@ public class FileUploadServiceImpl implements FileUploadService {
             log.error("Failed to save file to {} (absolute: {}): {}", targetDir, targetDir.toAbsolutePath(), e.getMessage(), e);
             throw new RuntimeException("Failed to save file", e);
         }
+    }
+
+    @Override
+    public List<String> uploadFiles(Long profileId, List<MultipartFile> files, String path) {
+        if (files == null || files.isEmpty()) {
+            throw new IllegalArgumentException("No files provided");
+        }
+
+        List<String> urls = new ArrayList<>(files.size());
+        for (MultipartFile file : files) {
+            urls.add(uploadFile(profileId, file, path));
+        }
+        return urls;
     }
 
     @Override

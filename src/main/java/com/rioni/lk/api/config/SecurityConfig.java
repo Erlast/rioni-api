@@ -39,7 +39,7 @@ public class SecurityConfig {
         }))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/login", "/api/auth/check-sms", "/api/auth/check_sms", "/api/auth/check-contact", "/api/auth/recover-sms", "/api/auth/recover_sms", "/api/auth/change_password", "/api/health", "/api/currencies/nbg-rates", "/uploads/**", "/error").permitAll()
+                .requestMatchers("/api/auth/login", "/api/auth/check-sms", "/api/auth/check_sms", "/api/auth/check-contact", "/api/auth/recover-sms", "/api/auth/recover_sms", "/api/auth/change_password", "/api/auth/registration-sms-code", "/api/auth/registration", "/api/health", "/api/currencies/nbg-rates", "/uploads/**", "/error").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(requestLoggingFilter, LogoutFilter.class)
